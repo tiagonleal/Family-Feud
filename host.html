@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Family Feud - Painel de Controlo</title>
-    <link rel="stylesheet" href="css/common.css">
-    <link rel="stylesheet" href="css/host.css">
+    <link rel="stylesheet" href="css/common.css?v=12">
+    <link rel="stylesheet" href="css/host.css?v=12">
 </head>
 <body>
     <div class="host-container">
@@ -46,18 +46,7 @@
                     </div>
                 </div>
 
-                <!-- Answers Panel -->
-                <div class="answers-panel">
-                    <div class="answers-panel-header">
-                        <h2>Respostas <span class="answers-hint">(clica para revelar)</span></h2>
-                        <button class="btn-reveal-all" onclick="revealAllAnswers()">👁️ Revelar Todas</button>
-                    </div>
-                    <div class="answers-grid" id="answersGrid">
-                        <!-- Answers rendered here -->
-                    </div>
-                </div>
-
-                <!-- Wrong Answer Input -->
+                <!-- Wrong Answer Input - Movido para logo após a pergunta -->
                 <div class="wrong-panel">
                     <div class="wrong-input-group">
                         <input type="text" 
@@ -75,9 +64,20 @@
                     </div>
                     <button class="btn-reset-strikes" onclick="resetStrikes()">🔄 Limpar Strikes</button>
                 </div>
+
+                <!-- Answers Panel -->
+                <div class="answers-panel">
+                    <div class="answers-panel-header">
+                        <h2>Respostas</h2>
+                        <button class="btn-reveal-all" id="btnRevealAll" onclick="revealAllAnswers()">👁️ Revelar Todas</button>
+                    </div>
+                    <div class="answers-grid" id="answersGrid">
+                        <!-- Answers rendered here -->
+                    </div>
+                </div>
             </div>
 
-            <!-- Right Panel - Game State -->
+            <!-- Right Panel - Debug/Info (simplificado) -->
             <div class="state-panel">
                 <!-- Timer Control -->
                 <div class="timer-panel">
@@ -87,9 +87,9 @@
                         <span class="timer-unit">seg</span>
                     </div>
                     <div class="timer-controls">
-                        <button onclick="startTimer()">▶️ Iniciar</button>
-                        <button onclick="stopTimer()">⏹️ Parar</button>
-                        <button onclick="resetTimer()">🔄 Reset</button>
+                        <button onclick="startTimer()">▶️</button>
+                        <button onclick="stopTimer()">⏹️</button>
+                        <button onclick="resetTimer()">🔄</button>
                     </div>
                 </div>
 
@@ -105,14 +105,6 @@
                     </div>
                 </div>
 
-                <!-- Team Control -->
-                <div class="team-control">
-                    <h3>Equipa Ativa</h3>
-                    <div class="team-buttons" id="teamButtons">
-                        <!-- Team buttons rendered here -->
-                    </div>
-                </div>
-
                 <!-- Power-ups -->
                 <div class="powerups-panel">
                     <h3>Power-ups</h3>
@@ -123,21 +115,13 @@
 
                 <!-- Round Control -->
                 <div class="round-control">
-                    <h3>Controlo de Ronda</h3>
+                    <h3>Controlo</h3>
                     <button class="btn-next-round" onclick="nextRound()" id="nextRoundBtn">
                         Próxima Ronda ➡️
                     </button>
-                    <button class="btn-steal" onclick="enableSteal()" id="stealBtn">
+                    <button class="btn-steal" onclick="enableSteal()" id="stealBtn" style="display: none;">
                         🏴‍☠️ Modo Roubar
                     </button>
-                </div>
-
-                <!-- Game Log -->
-                <div class="log-panel">
-                    <h3>📋 Histórico</h3>
-                    <div class="log-entries" id="logEntries">
-                        <!-- Log entries -->
-                    </div>
                 </div>
             </div>
         </div>
@@ -153,14 +137,14 @@
                 <p id="confirmMessage"></p>
             </div>
             <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeConfirm()">Cancelar</button>
+                <button class="btn-cancel" id="cancelBtn" onclick="closeConfirm()">Cancelar</button>
                 <button class="btn-start" id="confirmBtn">Confirmar</button>
             </div>
         </div>
     </div>
 
-    <script src="js/storage.js"></script>
-    <script src="js/sounds.js"></script>
-    <script src="js/host.js"></script>
+    <script src="js/storage.js?v=12"></script>
+    <script src="js/sounds.js?v=12"></script>
+    <script src="js/host.js?v=12"></script>
 </body>
 </html>

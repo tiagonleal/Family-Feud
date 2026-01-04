@@ -5,6 +5,14 @@
 let selectedTeams = 2;
 let teamsData = [];
 
+// Escape HTML para prevenir XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // ============================================
 // INITIALIZATION
 // ============================================
@@ -50,6 +58,10 @@ function closeModal() {
 
 function openEditor() {
     window.location.href = 'editor.html';
+}
+
+function openConverter() {
+    window.location.href = 'converter.html';
 }
 
 function continueGame() {
@@ -127,7 +139,7 @@ function renderPlayersList(teamIndex) {
     
     container.innerHTML = players.map((player, i) => `
         <span class="player-tag">
-            ${player}
+            ${escapeHtml(player)}
             <button onclick="removePlayer(${teamIndex}, ${i})">&times;</button>
         </span>
     `).join('');
@@ -166,6 +178,21 @@ function changeTimer(delta) {
 // ============================================
 
 function startGame() {
+    // Adicionar jogadores pendentes nos inputs antes de validar
+    for (let i = 0; i < selectedTeams; i++) {
+        const input = document.getElementById(`playerInput${i}`);
+        if (input && input.value.trim()) {
+            const name = input.value.trim();
+            if (!teamsData[i]) teamsData[i] = { name: `Equipa ${i + 1}`, players: [] };
+            if (!teamsData[i].players) teamsData[i].players = [];
+            if (teamsData[i].players.length < 20) {
+                teamsData[i].players.push(name);
+                input.value = '';
+                renderPlayersList(i);
+            }
+        }
+    }
+    
     // Validar configuração
     const questions = Storage.getQuestions();
     const normalRoundsEl = document.getElementById('normalRounds');
@@ -214,21 +241,46 @@ function startGame() {
 
 function createInitialGameState(normalRounds, doubleRounds) {
     const questions = Storage.getQuestions();
+    const questionStats = Storage.getQuestionStats();
     const totalRounds = normalRounds + doubleRounds;
     
-    // Filtrar apenas perguntas válidas
+    // Filtrar apenas perguntas válidas (com pelo menos 1 resposta)
     const validQuestions = questions.filter(q => 
         q.text && q.text.trim() !== '' && 
         q.answers && q.answers.some(a => a && a.text && a.text.trim() !== '')
     );
     
-    // Baralhar perguntas e selecionar as necessárias
-    const shuffled = [...validQuestions].sort(() => Math.random() - 0.5);
-    const selectedQuestions = shuffled.slice(0, totalRounds);
+    // Ordenar por número de vezes usadas (menos usadas primeiro) e depois randomizar dentro do mesmo grupo
+    const sortedByUsage = [...validQuestions].map(q => ({
+        ...q,
+        usageCount: questionStats[q.id] || 0
+    }));
+    
+    // Agrupar por usage count
+    const grouped = {};
+    sortedByUsage.forEach(q => {
+        if (!grouped[q.usageCount]) grouped[q.usageCount] = [];
+        grouped[q.usageCount].push(q);
+    });
+    
+    // Randomizar dentro de cada grupo e juntar (menos usadas primeiro)
+    const usageCounts = Object.keys(grouped).map(Number).sort((a, b) => a - b);
+    let prioritizedQuestions = [];
+    usageCounts.forEach(count => {
+        const shuffledGroup = grouped[count].sort(() => Math.random() - 0.5);
+        prioritizedQuestions = prioritizedQuestions.concat(shuffledGroup);
+    });
+    
+    // Selecionar as necessárias
+    const selectedQuestions = prioritizedQuestions.slice(0, totalRounds);
     
     // Ordenar as respostas de cada pergunta por pontuação (maior primeiro)
+    // E filtrar respostas vazias
     selectedQuestions.forEach(q => {
         if (q.answers) {
+            // Filtrar respostas com texto
+            q.answers = q.answers.filter(a => a && a.text && a.text.trim() !== '');
+            // Ordenar por pontos
             q.answers.sort((a, b) => {
                 const pointsA = (a && typeof a.points === 'number') ? a.points : 0;
                 const pointsB = (b && typeof b.points === 'number') ? b.points : 0;
@@ -242,21 +294,27 @@ function createInitialGameState(normalRounds, doubleRounds) {
     
     // Adicionar rondas normais
     for (let i = 0; i < normalRounds; i++) {
+        const q = selectedQuestions[i];
+        const answerCount = q && q.answers ? q.answers.length : 0;
         rounds.push({
-            question: selectedQuestions[i],
+            question: q,
             multiplier: 1,
-            revealed: Array(8).fill(false),
-            completed: false
+            revealed: Array(answerCount).fill(false),
+            completed: false,
+            questionRevealed: false  // Pergunta ainda não foi revelada no display
         });
     }
     
     // Adicionar rondas duplas
     for (let i = 0; i < doubleRounds; i++) {
+        const q = selectedQuestions[normalRounds + i];
+        const answerCount = q && q.answers ? q.answers.length : 0;
         rounds.push({
-            question: selectedQuestions[normalRounds + i],
+            question: q,
             multiplier: 2,
-            revealed: Array(8).fill(false),
-            completed: false
+            revealed: Array(answerCount).fill(false),
+            completed: false,
+            questionRevealed: false  // Pergunta ainda não foi revelada no display
         });
     }
     const timerSecondsEl = document.getElementById('timerSeconds');
@@ -289,12 +347,48 @@ function createInitialGameState(normalRounds, doubleRounds) {
 function openGameWindows() {
     // Abre a janela do display (para o ecrã grande)
     const displayWindow = window.open('display.html', 'FamilyFeud_Display', 
-        'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no');
+        'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no,fullscreen=yes');
+    
+    if (!displayWindow || displayWindow.closed || typeof displayWindow.closed === 'undefined') {
+        alert('⚠️ O browser bloqueou a janela do Display!\n\nPor favor, permite popups para este site e tenta novamente.\n\nAlternativamente, abre display.html manualmente noutra janela/ecrã.');
+    }
     
     // Redireciona a janela atual para o painel do host
     setTimeout(() => {
         window.location.href = 'host.html';
     }, 500);
+}
+
+function shutdownServer() {
+    const confirmed = confirm(
+        '⏹️ PARAR SERVIDOR\n\n' +
+        'Para parar completamente:\n\n' +
+        '→ FECHA A JANELA PRETA DO TERMINAL\n\n' +
+        '(É a janela onde correste run.bat)\n\n' +
+        'Queres fechar esta janela do browser agora?'
+    );
+    
+    if (confirmed) {
+        // Limpar estado do jogo
+        Storage.clearGameState();
+        
+        // Fechar janela
+        window.close();
+        
+        // Se não conseguir fechar (restrições do browser), mostrar mensagem
+        setTimeout(() => {
+            document.body.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0a0f2c; color: white; font-family: Arial, sans-serif; text-align: center;">
+                    <h1 style="color: #ffd700; font-size: 3rem;">⏹️ Para Parar</h1>
+                    <p style="font-size: 1.5rem; max-width: 500px; line-height: 1.6;">
+                        <strong style="color: #ff6b6b;">Fecha a janela preta do terminal</strong>
+                    </p>
+                    <p style="margin-top: 20px; color: #888; font-size: 1.1rem;">Clica no X da janela onde correste run.bat</p>
+                    <p style="margin-top: 40px; color: #666;">Podes fechar esta janela do browser também.</p>
+                </div>
+            `;
+        }, 100);
+    }
 }
 
 // Fechar modal ao clicar fora

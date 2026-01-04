@@ -3,6 +3,15 @@
    ============================================ */
 
 let gameState = null;
+let hasRequestedFullscreen = false;
+
+// Escape HTML para prevenir XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 // ============================================
 // INITIALIZATION
@@ -18,6 +27,14 @@ function initDisplay() {
     
     if (!gameState) {
         console.error('No game state found');
+        // Mostrar mensagem ao utilizador
+        document.body.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; font-family: Arial, sans-serif;">
+                <h1 style="font-size: 3rem; margin-bottom: 1rem;">⏳ À espera do jogo...</h1>
+                <p style="font-size: 1.5rem; color: #888;">Inicia um jogo no menu principal</p>
+                <button onclick="location.reload()" style="margin-top: 2rem; padding: 15px 30px; font-size: 1.2rem; background: #4ecdc4; border: none; border-radius: 10px; cursor: pointer;">🔄 Atualizar</button>
+            </div>
+        `;
         return;
     }
     
@@ -30,6 +47,61 @@ function initDisplay() {
     
     // Inicializa sons
     Sounds.init();
+    
+    // Mostrar overlay para entrar em fullscreen
+    showFullscreenPrompt();
+}
+
+function showFullscreenPrompt() {
+    // Criar overlay que pede clique para fullscreen
+    const overlay = document.createElement('div');
+    overlay.id = 'fullscreenPrompt';
+    overlay.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: rgba(0,0,0,0.95); color: white; font-family: Arial, sans-serif; cursor: pointer; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999;">
+            <h1 style="font-size: 4rem; color: #ffd700; margin-bottom: 1rem;">🎮 FAMILY FEUD</h1>
+            <p style="font-size: 2rem; margin-bottom: 2rem;">Clica em qualquer sítio para começar</p>
+            <div style="font-size: 1.5rem; color: #4ecdc4; animation: pulse 2s infinite;">👆 CLICA AQUI 👆</div>
+            <p style="font-size: 1rem; color: #888; margin-top: 2rem;">O ecrã entrará em modo fullscreen</p>
+        </div>
+    `;
+    
+    overlay.addEventListener('click', () => {
+        // Remover overlay
+        overlay.remove();
+        
+        // Entrar em fullscreen
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen().catch(err => {
+                console.log('Fullscreen não disponível:', err);
+            });
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+        
+        hasRequestedFullscreen = true;
+    });
+    
+    document.body.appendChild(overlay);
+}
+
+function requestFullscreenOnce() {
+    if (hasRequestedFullscreen) return;
+    hasRequestedFullscreen = true;
+    
+    // Tentar fullscreen
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => {
+            console.log('Fullscreen não disponível:', err);
+        });
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+    }
 }
 
 // ============================================
@@ -50,6 +122,10 @@ function handleSyncMessage(message) {
             revealAnswer(data.index, data.answer);
             break;
             
+        case Sync.EVENTS.REVEAL_QUESTION:
+            revealQuestionOnDisplay(data.questionText);
+            break;
+            
         case Sync.EVENTS.ADD_STRIKE:
             showStrikes(data.count);
             break;
@@ -66,6 +142,7 @@ function handleSyncMessage(message) {
             gameState = Storage.getGameState();
             renderScoreboard();
             renderCurrentRound();
+            clearWrongGuesses(); // Limpar wrong guesses da ronda anterior
             break;
             
         case Sync.EVENTS.TIMER_START:
@@ -99,6 +176,22 @@ function handleSyncMessage(message) {
         case Sync.EVENTS.USE_POWERUP:
             animatePowerup(data.teamIndex, data.powerup);
             break;
+            
+        case Sync.EVENTS.STEAL_SUCCESS:
+            handleStealSuccess(data);
+            break;
+            
+        case Sync.EVENTS.STEAL_FAIL:
+            handleStealFail(data);
+            break;
+            
+        case Sync.EVENTS.WRONG_GUESS:
+            showWrongGuess(data.guess, data.teamIndex);
+            break;
+            
+        case Sync.EVENTS.AWARD_POINTS:
+            animatePointsToTeam(data.teamIndex, data.points, data.newScore);
+            break;
     }
 }
 
@@ -117,7 +210,7 @@ function renderScoreboard() {
         return `
             <div class="team-panel ${gameState.controllingTeam === i ? 'active' : ''}" id="team${i}">
                 <div class="team-info">
-                    <div class="team-name">${team.name || 'Equipa'}</div>
+                    <div class="team-name">${escapeHtml(team.name) || 'Equipa'}</div>
                     <div class="team-powerups">
                         <span class="powerup-icon ${!powerups.pass ? 'used' : ''}" title="Passar Vez">🔄</span>
                         <span class="powerup-icon ${!powerups.extra ? 'used' : ''}" title="Resposta Extra">➕</span>
@@ -126,6 +219,20 @@ function renderScoreboard() {
                 <div class="team-score" id="score${i}">${team.score || 0}</div>
             </div>
         `;
+    }).join('');
+    
+    // Render wrong guesses containers
+    renderWrongGuessesContainers();
+}
+
+function renderWrongGuessesContainers() {
+    const container = document.getElementById('wrongGuessesContainer');
+    if (!container || !gameState || !gameState.teams) return;
+    
+    // Criar um container para cada equipa
+    container.innerHTML = gameState.teams.map((team, i) => {
+        const position = i === 0 ? 'left' : 'right';
+        return `<div class="team-wrong-guesses ${position}" id="wrongGuesses${i}"></div>`;
     }).join('');
 }
 
@@ -141,24 +248,26 @@ function renderCurrentRound() {
     
     const multiplier = document.querySelector('.round-multiplier');
     if (multiplier) {
-        if (round.multiplier > 1) {
-            multiplier.textContent = `${round.multiplier}x PONTOS`;
+        const mult = round.multiplier || 1;
+        if (mult > 1) {
+            multiplier.textContent = `${mult}x PONTOS`;
             multiplier.classList.add('visible');
         } else {
             multiplier.classList.remove('visible');
         }
     }
     
-    // Show question if in playing phase
+    // Mostrar pergunta APENAS se foi revelada pelo host
     const questionDisplay = document.getElementById('questionDisplay');
     const questionText = document.getElementById('questionText');
     
     if (questionDisplay && questionText) {
-        if (gameState.phase !== 'faceoff' || (round.revealed && round.revealed.some(r => r))) {
+        if (round.questionRevealed) {
             questionDisplay.classList.add('visible');
             questionText.textContent = round.question.text || '';
         } else {
             questionDisplay.classList.remove('visible');
+            questionText.textContent = '';
         }
     }
     
@@ -169,36 +278,93 @@ function renderCurrentRound() {
     updateRoundPoints();
 }
 
+function revealQuestionOnDisplay(questionText) {
+    const questionDisplay = document.getElementById('questionDisplay');
+    const questionTextEl = document.getElementById('questionText');
+    
+    if (questionDisplay && questionTextEl) {
+        questionTextEl.textContent = questionText || '';
+        questionDisplay.classList.add('visible');
+        
+        // Animação
+        questionDisplay.style.animation = 'none';
+        setTimeout(() => {
+            questionDisplay.style.animation = 'slideDown 0.5s ease';
+        }, 10);
+    }
+    
+    // Atualizar estado local
+    if (gameState && gameState.rounds && gameState.rounds[gameState.currentRound]) {
+        gameState.rounds[gameState.currentRound].questionRevealed = true;
+    }
+}
+
 function renderAnswerBoard(round) {
     const leftColumn = document.getElementById('leftColumn');
     const rightColumn = document.getElementById('rightColumn');
+    const answerBoard = document.querySelector('.answer-board');
     
     if (!leftColumn || !rightColumn) return;
     if (!round || !round.question || !round.question.answers) return;
     
+    // As respostas já vêm filtradas e ordenadas do menu.js
+    const answers = round.question.answers;
+    const totalAnswers = answers.length;
+    
+    // Garantir que stolen existe
+    const stolen = round.stolen || [];
+    
+    // Adicionar/remover classe para centrar quando há 4 ou menos respostas
+    if (answerBoard) {
+        if (totalAnswers <= 4) {
+            answerBoard.classList.add('single-column');
+        } else {
+            answerBoard.classList.remove('single-column');
+        }
+    }
+    
+    // Calcular quantas respostas em cada coluna
+    // Se temos 4 ou menos respostas: todas na esquerda, coluna centrada
+    // Se temos 5-8 respostas: dividir entre as duas colunas
+    const leftCount = totalAnswers <= 4 ? totalAnswers : Math.ceil(totalAnswers / 2);
+    
     let leftHtml = '';
     let rightHtml = '';
     
-    for (let i = 0; i < 8; i++) {
-        const answer = round.question.answers[i];
-        const isRevealed = round.revealed[i];
+    // Renderizar coluna esquerda
+    for (let i = 0; i < leftCount; i++) {
+        const answer = answers[i];
+        const isRevealed = round.revealed && round.revealed[i];
+        const isStolen = stolen[i]; // Resposta revelada por roubo (cinzento)
         const hasAnswer = answer && answer.text && answer.text.trim() !== '';
         
-        const html = `
-            <div class="answer-panel ${isRevealed ? 'revealed' : 'hidden'}" id="answer${i}">
+        leftHtml += `
+            <div class="answer-panel ${isRevealed ? 'revealed' : 'hidden'} ${isStolen ? 'stolen' : ''}" id="answer${i}">
                 <div class="answer-num">${i + 1}</div>
                 <div class="answer-content">
-                    <span class="answer-text">${hasAnswer && isRevealed ? answer.text : ''}</span>
+                    <span class="answer-text">${hasAnswer && isRevealed ? escapeHtml(answer.text) : ''}</span>
                 </div>
                 <div class="answer-points">${hasAnswer && isRevealed ? answer.points : ''}</div>
             </div>
         `;
+    }
+    
+    // Renderizar coluna direita
+    for (let i = leftCount; i < totalAnswers; i++) {
+        const answer = answers[i];
+        const isRevealed = round.revealed && round.revealed[i];
+        const isStolen = stolen[i]; // Resposta revelada por roubo (cinzento)
+        const hasAnswer = answer && answer.text && answer.text.trim() !== '';
         
-        if (i < 4) {
-            leftHtml += html;
-        } else {
-            rightHtml += html;
-        }
+        rightHtml += `
+            <div class="answer-panel ${isRevealed ? 'revealed' : 'hidden'} ${isStolen ? 'stolen' : ''}" id="answer${i}">
+                <div class="answer-num">${i + 1}</div>
+                <div class="answer-content">
+                    <span class="answer-text">${hasAnswer && isRevealed ? escapeHtml(answer.text) : ''}</span>
+                </div>
+                <div class="answer-points">${hasAnswer && isRevealed ? answer.points : ''}</div>
+            </div>
+        `;
     }
     
     leftColumn.innerHTML = leftHtml;
@@ -213,29 +379,24 @@ function revealAnswer(index, answer) {
     const panel = document.getElementById(`answer${index}`);
     if (!panel) return;
     
-    // Play reveal sound
-    Sounds.play('reveal');
-    
     // Animate reveal
     panel.classList.remove('hidden');
     panel.classList.add('revealed');
     
-    // Update content
-    const numEl = panel.querySelector('.answer-num');
+    // Update content - não atualizar o número porque já está correto do renderAnswerBoard
     const textEl = panel.querySelector('.answer-text');
     const pointsEl = panel.querySelector('.answer-points');
     
-    if (numEl) numEl.textContent = index + 1;
     if (textEl) textEl.textContent = answer ? answer.text : '';
     if (pointsEl) pointsEl.textContent = answer ? answer.points : '';
     
-    // Show points popup
+    // Show points popup - passa o índice para posicionar
     if (answer && answer.points) {
-        showPointsPopup(answer.points);
+        showPointsPopup(answer.points, index);
     }
     
     // Update game state locally
-    if (gameState && gameState.rounds && gameState.rounds[gameState.currentRound]) {
+    if (gameState && gameState.rounds && gameState.rounds[gameState.currentRound] && gameState.rounds[gameState.currentRound].revealed) {
         gameState.rounds[gameState.currentRound].revealed[index] = true;
     }
     
@@ -243,23 +404,34 @@ function revealAnswer(index, answer) {
     updateRoundPoints();
 }
 
-function showPointsPopup(points) {
+function showPointsPopup(points, answerIndex) {
     const popup = document.getElementById('pointsPopup');
     if (!popup) return;
     
     const value = popup.querySelector('.points-value');
     if (!value) return;
     
-    value.textContent = points;
+    // Posicionar o popup perto da resposta revelada
+    const answerPanel = document.getElementById(`answer${answerIndex}`);
+    if (answerPanel) {
+        const rect = answerPanel.getBoundingClientRect();
+        popup.style.left = `${rect.left + rect.width / 2}px`;
+        popup.style.top = `${rect.top + rect.height / 2}px`;
+        popup.style.transform = 'translate(-50%, -50%)';
+    } else {
+        // Fallback para o centro
+        popup.style.left = '50%';
+        popup.style.top = '50%';
+        popup.style.transform = 'translate(-50%, -50%)';
+    }
+    
+    value.textContent = `+${points}`;
     popup.classList.add('active');
     
-    // Play ding sound
-    Sounds.play('ding');
-    
-    // Hide after delay
+    // Hide after animation
     setTimeout(() => {
         popup.classList.remove('active');
-    }, 1500);
+    }, 1200);
 }
 
 function updateRoundPoints() {
@@ -269,13 +441,16 @@ function updateRoundPoints() {
     if (!gameState) return;
     
     const round = gameState.rounds[gameState.currentRound];
-    if (!round || !round.question || !round.question.answers) return;
+    if (!round || !round.question || !round.question.answers || !round.revealed) return;
     
+    const multiplier = round.multiplier || 1;
+    const stolen = round.stolen || [];
     let total = 0;
     round.revealed.forEach((isRevealed, i) => {
         const answer = round.question.answers[i];
-        if (isRevealed && answer && typeof answer.points === 'number') {
-            total += answer.points * round.multiplier;
+        // Não contar respostas stolen (reveladas a cinzento)
+        if (isRevealed && !stolen[i] && answer && typeof answer.points === 'number') {
+            total += answer.points * multiplier;
         }
     });
     
@@ -304,9 +479,6 @@ function showStrikes(count) {
         }
         return;
     }
-    
-    // Play buzzer sound
-    Sounds.play('buzzer');
     
     // Show overlay
     overlay.classList.add('active');
@@ -350,6 +522,57 @@ function updateTeamScore(teamIndex, score) {
             scoreEl.style.transform = 'scale(1)';
         }, 300);
     }
+}
+
+function animatePointsToTeam(teamIndex, points, newScore) {
+    const roundPointsEl = document.getElementById('roundPoints');
+    const teamPanel = document.getElementById(`team${teamIndex}`);
+    const scoreEl = document.getElementById(`score${teamIndex}`);
+    
+    if (!teamPanel || !scoreEl) {
+        // Fallback: just update the score
+        updateTeamScore(teamIndex, newScore);
+        return;
+    }
+    
+    // Obter posições
+    const startRect = roundPointsEl ? roundPointsEl.getBoundingClientRect() : { 
+        left: window.innerWidth / 2, 
+        top: window.innerHeight / 2,
+        width: 0,
+        height: 0
+    };
+    const endRect = scoreEl.getBoundingClientRect();
+    
+    // Criar elemento flutuante de pontos
+    const flyingPoints = document.createElement('div');
+    flyingPoints.className = 'flying-points';
+    flyingPoints.textContent = `+${points}`;
+    
+    // Posicionar no centro (onde estão os round-points)
+    flyingPoints.style.left = `${startRect.left + startRect.width / 2}px`;
+    flyingPoints.style.top = `${startRect.top + startRect.height / 2}px`;
+    
+    document.body.appendChild(flyingPoints);
+    
+    // Esconder o round-points temporariamente
+    if (roundPointsEl) {
+        roundPointsEl.classList.remove('visible');
+    }
+    
+    // Forçar reflow
+    flyingPoints.offsetHeight;
+    
+    // Animar para a posição do score da equipa
+    flyingPoints.style.left = `${endRect.left + endRect.width / 2}px`;
+    flyingPoints.style.top = `${endRect.top + endRect.height / 2}px`;
+    flyingPoints.classList.add('animate');
+    
+    // Quando animação terminar, atualizar score e remover elemento
+    setTimeout(() => {
+        updateTeamScore(teamIndex, newScore);
+        flyingPoints.remove();
+    }, 800);
 }
 
 function setActiveTeam(teamIndex) {
@@ -415,7 +638,9 @@ function updateTimer(seconds) {
 
 function hideTimer() {
     const display = document.getElementById('timerDisplay');
-    if (display) display.classList.remove('visible');
+    if (display) {
+        display.classList.remove('visible');
+    }
 }
 
 // ============================================
@@ -443,13 +668,11 @@ function showWinner(data) {
     
     if (!overlay || !teamEl || !scoreEl) return;
     
-    teamEl.textContent = data.teamName;
-    scoreEl.textContent = `${data.score} PONTOS`;
+    // Usar textContent é seguro contra XSS
+    teamEl.textContent = data.teamName || 'Vencedor';
+    scoreEl.textContent = `${data.score || 0} PONTOS`;
     
     overlay.classList.add('active');
-    
-    // Play victory sound
-    Sounds.play('victory');
     
     // Create confetti
     createConfetti();
@@ -487,3 +710,124 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// ============================================
+// STEAL MODE
+// ============================================
+
+function handleStealSuccess(data) {
+    // Atualizar gameState local
+    gameState = Storage.getGameState();
+    
+    // Mostrar animação de roubo
+    showStealAnimation(true, data.teamIndex, data.points);
+    
+    // Atualizar scoreboard
+    updateTeamScore(data.teamIndex, gameState.teams[data.teamIndex]?.score || 0);
+    
+    // Renderizar respostas com as roubadas a cinzento
+    renderCurrentRound();
+}
+
+function handleStealFail(data) {
+    // Atualizar gameState local
+    gameState = Storage.getGameState();
+    
+    // Mostrar animação de falha no roubo
+    showStealAnimation(false, null, 0);
+    
+    // Renderizar respostas com todas as não-reveladas a cinzento
+    renderCurrentRound();
+}
+
+function showStealAnimation(success, teamIndex, points) {
+    const overlay = document.createElement('div');
+    overlay.className = 'steal-overlay';
+    
+    if (success) {
+        const teamName = gameState.teams[teamIndex]?.name || 'Equipa';
+        overlay.innerHTML = `
+            <div class="steal-content success">
+                <div class="steal-icon">🏴‍☠️</div>
+                <div class="steal-text">ROUBADO!</div>
+                <div class="steal-team">${escapeHtml(teamName)}</div>
+                <div class="steal-points">+${points} PONTOS</div>
+            </div>
+        `;
+    } else {
+        overlay.innerHTML = `
+            <div class="steal-content fail">
+                <div class="steal-icon">❌</div>
+                <div class="steal-text">ROUBO FALHADO!</div>
+                <div class="steal-subtext">Ninguém ganha os pontos</div>
+            </div>
+        `;
+    }
+    
+    document.body.appendChild(overlay);
+    
+    // Animação de entrada
+    setTimeout(() => overlay.classList.add('active'), 50);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 500);
+    }, 3000);
+}
+
+// ============================================
+// WRONG GUESS DISPLAY
+// ============================================
+
+function showWrongGuess(guess, teamIndex) {
+    if (!guess) return;
+    
+    // Usar teamIndex passado, ou fallback para controllingTeam do gameState
+    const team = teamIndex !== undefined ? teamIndex : (gameState ? gameState.controllingTeam : 0);
+    
+    // Criar overlay temporário para mostrar a resposta errada (flash no centro)
+    const overlay = document.createElement('div');
+    overlay.className = 'wrong-guess-overlay';
+    overlay.innerHTML = `
+        <div class="wrong-guess-content">
+            <div class="wrong-guess-text">${escapeHtml(guess)}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Animação de entrada
+    setTimeout(() => overlay.classList.add('active'), 50);
+    
+    // Remover após o strike desaparecer (2 segundos)
+    setTimeout(() => {
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 300);
+    }, 2000);
+    
+    // Adicionar permanentemente à lista da equipa
+    addWrongGuessToTeam(guess, team);
+}
+
+function addWrongGuessToTeam(guess, teamIndex) {
+    if (teamIndex === undefined || teamIndex === null) return;
+    
+    const container = document.getElementById(`wrongGuesses${teamIndex}`);
+    if (!container) return;
+    
+    const item = document.createElement('div');
+    item.className = 'wrong-guess-item';
+    item.textContent = guess;
+    
+    container.appendChild(item);
+}
+
+function clearWrongGuesses() {
+    // Limpar todas as listas de wrong guesses (chamado quando muda de ronda)
+    if (!gameState || !gameState.teams) return;
+    
+    gameState.teams.forEach((team, i) => {
+        const container = document.getElementById(`wrongGuesses${i}`);
+        if (container) container.innerHTML = '';
+    });}

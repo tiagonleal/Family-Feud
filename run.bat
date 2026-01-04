@@ -16,16 +16,15 @@ if %errorlevel% equ 0 (
     echo [*] Iniciando servidor em http://localhost:8000...
     echo [*] Abrindo browser em 3 segundos...
     echo.
-    start /B python -m http.server 8000
-    timeout /t 3 /nobreak >nul
-    start http://localhost:8000
-    echo.
     echo ========================================
     echo    SERVIDOR A CORRER!
     echo    URL: http://localhost:8000
-    echo    Pressiona Ctrl+C para parar
+    echo.
+    echo    Para PARAR: Fecha esta janela
     echo ========================================
     echo.
+    timeout /t 3 /nobreak >nul
+    start http://localhost:8000
     python -m http.server 8000
     goto end
 )
@@ -37,16 +36,15 @@ if %errorlevel% equ 0 (
     echo [*] Iniciando servidor em http://localhost:8000...
     echo [*] Abrindo browser em 3 segundos...
     echo.
-    start /B python3 -m http.server 8000
-    timeout /t 3 /nobreak >nul
-    start http://localhost:8000
-    echo.
     echo ========================================
     echo    SERVIDOR A CORRER!
     echo    URL: http://localhost:8000
-    echo    Pressiona Ctrl+C para parar
+    echo.
+    echo    Para PARAR: Fecha esta janela
     echo ========================================
     echo.
+    timeout /t 3 /nobreak >nul
+    start http://localhost:8000
     python3 -m http.server 8000
     goto end
 )
@@ -58,16 +56,16 @@ if %errorlevel% equ 0 (
     echo [*] Iniciando servidor em http://localhost:8000...
     echo [*] Abrindo browser em 3 segundos...
     echo.
-    timeout /t 3 /nobreak >nul
-    start http://localhost:8000
-    echo.
     echo ========================================
     echo    SERVIDOR A CORRER!
     echo    URL: http://localhost:8000
-    echo    Pressiona Ctrl+C para parar
+    echo.
+    echo    Para PARAR: Fecha esta janela
     echo ========================================
     echo.
-    npx http-server -p 8000 -c-1 -o
+    timeout /t 3 /nobreak >nul
+    start http://localhost:8000
+    npx http-server -p 8000 -c-1
     goto end
 )
 

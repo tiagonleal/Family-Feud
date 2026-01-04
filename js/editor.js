@@ -3,8 +3,18 @@
    ============================================ */
 
 let questions = [];
+let filteredQuestions = [];
 let currentQuestionId = null;
 let saveTimeout = null;
+let searchQuery = '';
+
+// Escape HTML para prevenir XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 // ============================================
 // INITIALIZATION
@@ -17,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadQuestions() {
     questions = Storage.getQuestions();
-    renderQuestionsList();
+    filteredQuestions = questions;
+    renderQuestionsGrid();
     updateQuestionCount();
 }
 
@@ -52,40 +63,96 @@ function generateAnswerInputs() {
 }
 
 // ============================================
-// QUESTIONS LIST
+// QUESTIONS GRID
 // ============================================
 
-function renderQuestionsList() {
-    const container = document.getElementById('questionsList');
+function renderQuestionsGrid() {
+    const container = document.getElementById('questionsGrid');
+    const gridCount = document.getElementById('gridCount');
+    const searchClear = document.getElementById('searchClear');
+    
     if (!container) return;
     
-    if (questions.length === 0) {
-        container.innerHTML = `
-            <div class="empty-list">
-                <p>Sem perguntas ainda.</p>
-                <p>Clica em "+ Nova" para começar!</p>
-            </div>
-        `;
+    // Atualizar contador
+    if (gridCount) {
+        const total = questions.length;
+        const showing = filteredQuestions.length;
+        if (searchQuery) {
+            gridCount.textContent = `${showing} de ${total} perguntas`;
+        } else {
+            gridCount.textContent = `${total} perguntas`;
+        }
+    }
+    
+    // Mostrar/esconder botão de limpar pesquisa
+    if (searchClear) {
+        searchClear.style.display = searchQuery ? 'block' : 'none';
+    }
+    
+    if (filteredQuestions.length === 0) {
+        if (searchQuery) {
+            container.innerHTML = `
+                <div class="empty-grid">
+                    <div class="empty-icon">🔍</div>
+                    <h3>Nenhuma pergunta encontrada</h3>
+                    <p>Tenta outra pesquisa ou <button class="link-btn" onclick="clearSearch()">limpa a pesquisa</button></p>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="empty-grid">
+                    <div class="empty-icon">❓</div>
+                    <h3>Sem perguntas ainda</h3>
+                    <p>Clica em "+ Nova Pergunta" para começar!</p>
+                </div>
+            `;
+        }
         return;
     }
     
-    container.innerHTML = questions.map((q, i) => {
+    container.innerHTML = filteredQuestions.map((q, filteredIndex) => {
+        // Encontrar índice real na lista completa
+        const realIndex = questions.findIndex(qu => qu.id === q.id);
         const answers = q.answers || [];
         const answersCount = answers.filter(a => a && a.text && a.text.trim() !== '').length;
         const totalPoints = answers.reduce((sum, a) => sum + ((a && a.points) || 0), 0);
+        const questionPreview = q.text ? (q.text.length > 50 ? q.text.substring(0, 50) + '...' : q.text) : '(Sem texto)';
         
         return `
-            <div class="question-item ${q.id === currentQuestionId ? 'active' : ''}" 
-                 onclick="selectQuestion(${q.id})">
-                <div class="q-number">Pergunta ${i + 1}</div>
-                <div class="q-text">${q.text || '(Sem texto)'}</div>
-                <div class="q-stats">
-                    <span>📝 ${answersCount}/8 respostas</span>
-                    <span>⭐ ${totalPoints} pts</span>
+            <div class="question-card" onclick="selectQuestion(${q.id})">
+                <div class="card-number">#${realIndex + 1}</div>
+                <div class="card-title">${escapeHtml(questionPreview)}</div>
+                <div class="card-stats">
+                    <span class="stat-answers">📝 ${answersCount}</span>
+                    <span class="stat-points">⭐ ${totalPoints} pts</span>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+function filterQuestions() {
+    const searchInput = document.getElementById('searchInput');
+    searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    
+    if (!searchQuery) {
+        filteredQuestions = questions;
+    } else {
+        filteredQuestions = questions.filter(q => {
+            // Pesquisar apenas no texto da pergunta
+            return q.text && q.text.toLowerCase().includes(searchQuery);
+        });
+    }
+    
+    renderQuestionsGrid();
+}
+
+function clearSearch() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
+    searchQuery = '';
+    filteredQuestions = questions;
+    renderQuestionsGrid();
 }
 
 function updateQuestionCount() {
@@ -107,7 +174,7 @@ function newQuestion() {
     
     questions.push(newQ);
     Storage.saveQuestions(questions);
-    renderQuestionsList();
+    filterQuestions(); // Refresh filtered list
     updateQuestionCount();
     selectQuestion(newQ.id);
 }
@@ -118,11 +185,11 @@ function selectQuestion(id) {
     
     if (!question) return;
     
-    // Show editor form
-    const emptyState = document.getElementById('emptyState');
-    const editorForm = document.getElementById('editorForm');
-    if (emptyState) emptyState.style.display = 'none';
-    if (editorForm) editorForm.style.display = 'block';
+    // Hide grid, show editor
+    const gridView = document.getElementById('questionsGridView');
+    const editorPanel = document.getElementById('questionEditorPanel');
+    if (gridView) gridView.style.display = 'none';
+    if (editorPanel) editorPanel.style.display = 'flex';
     
     // Fill form
     const questionTextEl = document.getElementById('questionText');
@@ -137,13 +204,23 @@ function selectQuestion(id) {
         if (pointsEl) pointsEl.value = answer.points || '';
     }
     
-    // Update active state in list
-    renderQuestionsList();
-    
     // Focus on question text if empty
     if (!question.text && questionTextEl) {
         questionTextEl.focus();
     }
+}
+
+function backToGrid() {
+    currentQuestionId = null;
+    
+    // Show grid, hide editor
+    const gridView = document.getElementById('questionsGridView');
+    const editorPanel = document.getElementById('questionEditorPanel');
+    if (gridView) gridView.style.display = 'flex';
+    if (editorPanel) editorPanel.style.display = 'none';
+    
+    // Refresh grid
+    filterQuestions();
 }
 
 function deleteCurrentQuestion() {
@@ -153,14 +230,8 @@ function deleteCurrentQuestion() {
         questions = questions.filter(q => q.id !== currentQuestionId);
         Storage.saveQuestions(questions);
         
-        currentQuestionId = null;
-        const emptyState = document.getElementById('emptyState');
-        const editorForm = document.getElementById('editorForm');
-        if (emptyState) emptyState.style.display = 'flex';
-        if (editorForm) editorForm.style.display = 'none';
-        
-        renderQuestionsList();
         updateQuestionCount();
+        backToGrid();
     }
 }
 
@@ -218,14 +289,14 @@ function saveCurrentQuestion() {
         updatedAt: new Date().toISOString()
     };
     
-    // Save
+    // Save to localStorage
     const success = Storage.saveQuestions(questions);
     
     // Update status
     const status = document.getElementById('saveStatus');
     if (status) {
         if (success) {
-            status.textContent = '✓ Guardado automaticamente';
+            status.textContent = '✓ Guardado';
             status.className = 'auto-save-status';
         } else {
             status.textContent = '✗ Erro ao guardar';
@@ -234,7 +305,31 @@ function saveCurrentQuestion() {
     }
     
     // Update list (mostra contagem de respostas atualizada)
-    renderQuestionsList();
+    renderQuestionsGrid();
+}
+
+function autoExportQuestions() {
+    // Criar JSON string
+    const jsonContent = JSON.stringify(questions, null, 2);
+    
+    // Criar blob
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    
+    // Criar URL
+    const url = URL.createObjectURL(blob);
+    
+    // Criar link invisível e fazer download
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `family-feud-questions-${new Date().toISOString().split('T')[0]}.json`;
+    
+    // Simular clique
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Limpar URL
+    URL.revokeObjectURL(url);
 }
 
 // ============================================
@@ -286,15 +381,16 @@ async function importQuestions(event) {
     try {
         const imported = await Storage.importQuestionsFromFile(file);
         questions = imported;
-        renderQuestionsList();
+        filteredQuestions = questions;
+        renderQuestionsGrid();
         updateQuestionCount();
         
-        // Reset selection
+        // Reset selection e voltar ao grid
         currentQuestionId = null;
-        const emptyState = document.getElementById('emptyState');
-        const editorForm = document.getElementById('editorForm');
-        if (emptyState) emptyState.style.display = 'flex';
-        if (editorForm) editorForm.style.display = 'none';
+        const gridView = document.getElementById('questionsGridView');
+        const editorPanel = document.getElementById('questionEditorPanel');
+        if (gridView) gridView.style.display = 'flex';
+        if (editorPanel) editorPanel.style.display = 'none';
         
         alert(`${imported.length} perguntas importadas com sucesso!`);
     } catch (e) {

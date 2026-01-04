@@ -162,7 +162,7 @@ body {
 
 .round-number {
     font-size: 1.5rem;
-    color: var(--gold);
+    color: var(--white);
     text-transform: uppercase;
     letter-spacing: 3px;
 }
@@ -191,8 +191,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
+    justify-content: flex-start;
+    padding: 10px 20px 80px;
     position: relative;
 }
 
@@ -203,7 +203,7 @@ body {
 .question-display {
     width: 100%;
     max-width: 1200px;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
     display: none;
 }
 
@@ -234,6 +234,20 @@ body {
     gap: 20px;
     width: 100%;
     max-width: 1400px;
+}
+
+/* Quando há 4 ou menos respostas - centrar coluna única */
+.answer-board.single-column {
+    justify-content: center;
+}
+
+.answer-board.single-column .board-column:first-child {
+    flex: 0 1 600px;
+    max-width: 600px;
+}
+
+.answer-board.single-column .board-column:last-child {
+    display: none;
 }
 
 .board-column {
@@ -321,16 +335,17 @@ body {
 }
 
 /* ============================================
-   ROUND POINTS
+   ROUND POINTS - Posicionado abaixo do quadro de respostas
    ============================================ */
 
 .round-points {
-    position: absolute;
-    top: 50%;
+    position: fixed;
+    bottom: 3%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 50;
+    transform: translateX(-50%);
+    z-index: 40;
     display: none;
+    pointer-events: none;
 }
 
 .round-points.visible {
@@ -339,43 +354,62 @@ body {
 
 .round-points-value {
     font-family: var(--font-display);
-    font-size: 8rem;
-    color: var(--gold);
+    font-size: 5rem;
+    color: #000;
     text-shadow: 
-        0 0 50px rgba(255,215,0,0.8),
-        5px 5px 10px rgba(0,0,0,0.8);
-    background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%);
-    padding: 30px 60px;
-    border: 8px solid var(--gold);
-    border-radius: 20px;
+        0 0 20px rgba(255,215,0,0.8),
+        2px 2px 4px rgba(255,255,255,0.5);
+    background: linear-gradient(180deg, var(--gold) 0%, #c9a227 100%);
+    padding: 15px 50px;
+    border: 5px solid #8B6914;
+    border-radius: 15px;
 }
 
 /* ============================================
-   POINTS POPUP
+   POINTS POPUP - Animação de voo para o score
    ============================================ */
 
 .points-popup {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
     z-index: 200;
-    transition: transform 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    transition: none;
 }
 
 .points-popup.active {
-    transform: translate(-50%, -50%) scale(1);
-    animation: bounceIn 0.5s ease;
+    opacity: 1;
+    animation: pointsFly 1.2s ease-in-out forwards;
 }
 
 .points-value {
     font-family: var(--font-display);
-    font-size: 12rem;
+    font-size: 4rem;
     color: var(--gold);
     text-shadow: 
-        0 0 80px rgba(255,215,0,1),
-        0 0 120px rgba(255,215,0,0.8),
-        8px 8px 16px rgba(0,0,0,0.8);
+        0 0 40px rgba(255,215,0,1),
+        0 0 60px rgba(255,215,0,0.8),
+        4px 4px 8px rgba(0,0,0,0.8);
+}
+
+/* Animação de pontos voando da resposta para o scoreboard */
+@keyframes pointsFly {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+    20% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 1;
+    }
+    80% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -150%) scale(0.3);
+        opacity: 0;
+    }
 }
 
 /* ============================================
@@ -423,8 +457,8 @@ body {
 
 .timer-display {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 3%;
+    left: calc(50% + 200px);
     display: none;
     z-index: 50;
 }
@@ -552,6 +586,38 @@ body {
     100% { transform: translateY(100vh) rotate(720deg); }
 }
 
+@keyframes slideDown {
+    0% { 
+        transform: translateY(-100px) scaleY(0.3);
+        opacity: 0;
+        filter: blur(10px);
+    }
+    50% {
+        transform: translateY(10px) scaleY(1.05);
+        opacity: 1;
+        filter: blur(0);
+    }
+    70% {
+        transform: translateY(-5px) scaleY(0.98);
+    }
+    100% { 
+        transform: translateY(0) scaleY(1);
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+@keyframes slideIn {
+    0% { 
+        transform: translateX(-50px);
+        opacity: 0;
+    }
+    100% { 
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
 .confetti {
     position: fixed;
     width: 15px;
@@ -559,4 +625,237 @@ body {
     top: -20px;
     z-index: 600;
     animation: confetti-fall linear forwards;
+}
+
+/* ============================================
+   POWER-UPS (maiores para melhor visibilidade)
+   ============================================ */
+
+.team-powerups .powerup-icon {
+    font-size: 2rem !important;
+    opacity: 1;
+    transition: all 0.3s ease;
+}
+
+/* ============================================
+   STOLEN ANSWERS (respostas não adivinhadas)
+   ============================================ */
+
+.answer-panel.stolen {
+    opacity: 0.5 !important;
+    filter: grayscale(100%);
+}
+
+.answer-panel.stolen .answer-content,
+.answer-panel.stolen .answer-points {
+    color: #888 !important;
+}
+
+.answer-panel.stolen .answer-num {
+    background: #555 !important;
+    color: #999 !important;
+}
+
+/* ============================================
+   STEAL ANIMATION OVERLAY
+   ============================================ */
+
+.steal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.steal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.steal-content {
+    text-align: center;
+    animation: popIn 0.5s ease;
+}
+
+.steal-content.success .steal-icon {
+    font-size: 10rem;
+    animation: bounce 0.5s ease;
+}
+
+.steal-content.success .steal-text {
+    font-size: 5rem;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    letter-spacing: 10px;
+    margin: 20px 0;
+}
+
+.steal-content.success .steal-team {
+    font-size: 3rem;
+    color: #4ecdc4;
+    margin: 10px 0;
+}
+
+.steal-content.success .steal-points {
+    font-size: 4rem;
+    color: #96e6a1;
+    font-weight: bold;
+}
+
+.steal-content.fail .steal-icon {
+    font-size: 10rem;
+    animation: shake 0.5s ease;
+}
+
+.steal-content.fail .steal-text {
+    font-size: 4rem;
+    color: #ff6b6b;
+    letter-spacing: 5px;
+    margin: 20px 0;
+}
+
+.steal-content.fail .steal-subtext {
+    font-size: 2rem;
+    color: #888;
+}
+
+/* ============================================
+   FLYING POINTS ANIMATION
+   ============================================ */
+.flying-points {
+    position: fixed;
+    font-size: 4rem;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.5);
+    pointer-events: none;
+    z-index: 10000;
+    transform: translate(-50%, -50%);
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.flying-points.animate {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-20px); }
+    75% { transform: translateX(20px); }
+}
+
+/* ============================================
+   WRONG GUESS OVERLAY (temporary flash)
+   ============================================ */
+
+.wrong-guess-overlay {
+    position: fixed;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    z-index: 250;
+    pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+
+.wrong-guess-overlay.active {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+}
+
+.wrong-guess-content {
+    background: linear-gradient(180deg, rgba(198,40,40,0.95) 0%, rgba(139,28,28,0.95) 100%);
+    border: 5px solid var(--red);
+    border-radius: 15px;
+    padding: 20px 50px;
+    box-shadow: 0 0 40px rgba(198,40,40,0.8);
+}
+
+.wrong-guess-text {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    color: var(--white);
+    text-transform: uppercase;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+    letter-spacing: 3px;
+}
+
+/* ============================================
+   WRONG GUESSES LIST (static, per team)
+   ============================================ */
+
+.wrong-guesses-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 30px 15px;
+    pointer-events: none;
+    z-index: 45;
+}
+
+.team-wrong-guesses {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 45%;
+}
+
+.team-wrong-guesses.left {
+    align-items: flex-start;
+}
+
+.team-wrong-guesses.right {
+    align-items: flex-end;
+}
+
+.wrong-guess-item {
+    background: linear-gradient(180deg, rgba(198,40,40,0.9) 0%, rgba(139,28,28,0.9) 100%);
+    border: 3px solid var(--red);
+    border-radius: 10px;
+    padding: 8px 20px;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    color: var(--white);
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    letter-spacing: 2px;
+    animation: wrongGuessAppear 0.3s ease-out;
+    box-shadow: 0 0 15px rgba(198,40,40,0.5);
+}
+
+@keyframes wrongGuessAppear {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }

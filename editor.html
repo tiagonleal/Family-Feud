@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editor de Perguntas - Family Feud</title>
-    <link rel="stylesheet" href="css/common.css">
-    <link rel="stylesheet" href="css/editor.css">
+    <link rel="stylesheet" href="css/common.css?v=12">
+    <link rel="stylesheet" href="css/editor.css?v=12">
 </head>
 <body>
     <div class="editor-container">
@@ -19,11 +19,14 @@
                 <span class="question-count">
                     <span id="questionCount">0</span> perguntas
                 </span>
+                <button class="btn-excel" onclick="window.location.href='converter.html'">
+                    📊 Importar Excel
+                </button>
                 <button class="btn-export" onclick="exportQuestions()">
-                    📥 Exportar
+                    📥 Exportar JSON
                 </button>
                 <button class="btn-import" onclick="document.getElementById('importFile').click()">
-                    📤 Importar
+                    📤 Importar JSON
                 </button>
                 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importQuestions(event)">
             </div>
@@ -31,37 +34,48 @@
 
         <!-- Main Content -->
         <div class="editor-content">
-            <!-- Questions List -->
-            <aside class="questions-sidebar">
-                <div class="sidebar-header">
-                    <h2>Perguntas</h2>
-                    <button class="btn-add" onclick="newQuestion()">+ Nova</button>
+            <!-- Questions Grid View (when no question selected) -->
+            <div class="questions-grid-view" id="questionsGridView">
+                <div class="grid-header">
+                    <div class="grid-title">
+                        <h2>📋 Todas as Perguntas</h2>
+                        <span class="grid-count" id="gridCount">0 perguntas</span>
+                    </div>
+                    <div class="grid-controls">
+                        <div class="search-box">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" 
+                                   id="searchInput" 
+                                   placeholder="Pesquisar perguntas..."
+                                   oninput="filterQuestions()">
+                            <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+                        </div>
+                        <button class="btn-add-large" onclick="newQuestion()">+ Nova Pergunta</button>
+                    </div>
                 </div>
-                <div class="questions-list" id="questionsList">
-                    <!-- Generated dynamically -->
+                <div class="questions-grid" id="questionsGrid">
+                    <!-- Generated dynamically as cards -->
                 </div>
-            </aside>
+            </div>
 
-            <!-- Question Editor -->
-            <main class="question-editor" id="questionEditor">
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-icon">❓</div>
-                    <h2>Nenhuma pergunta selecionada</h2>
-                    <p>Seleciona uma pergunta da lista ou cria uma nova.</p>
-                    <button class="btn-primary" onclick="newQuestion()">+ Criar Pergunta</button>
+            <!-- Question Editor (hidden until a question is selected) -->
+            <div class="question-editor-panel" id="questionEditorPanel" style="display: none;">
+                <div class="editor-panel-header">
+                    <button class="btn-back-grid" onclick="backToGrid()">← Voltar às Perguntas</button>
+                    <button class="btn-delete" onclick="deleteCurrentQuestion()">🗑️ Eliminar</button>
                 </div>
 
-                <div class="editor-form" id="editorForm" style="display: none;">
+                <div class="editor-form">
                     <div class="form-header">
+                        <label class="form-label">Pergunta</label>
                         <input type="text" 
                                id="questionText" 
                                class="question-input"
                                placeholder="Escreve a pergunta aqui..."
                                oninput="autoSave()">
-                        <button class="btn-delete" onclick="deleteCurrentQuestion()">🗑️ Eliminar</button>
                     </div>
 
-                    <div class="answers-grid">
+                    <div class="answers-section">
                         <div class="answers-header">
                             <h3>Respostas</h3>
                             <button class="btn-sort" onclick="sortAnswers()">📊 Ordenar por Pontos</button>
@@ -77,11 +91,11 @@
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     </div>
 
-    <script src="js/storage.js"></script>
-    <script src="js/editor.js"></script>
+    <script src="js/storage.js?v=12"></script>
+    <script src="js/editor.js?v=12"></script>
 </body>
 </html>

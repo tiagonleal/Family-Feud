@@ -6,7 +6,8 @@ const Storage = {
     KEYS: {
         QUESTIONS: 'familyFeud_questions',
         GAME_STATE: 'familyFeud_gameState',
-        SETTINGS: 'familyFeud_settings'
+        SETTINGS: 'familyFeud_settings',
+        QUESTION_STATS: 'familyFeud_questionStats'  // Estatísticas de perguntas usadas
     },
 
     // ============================================
@@ -33,6 +34,41 @@ const Storage = {
             console.error('Error saving questions:', e);
             return false;
         }
+    },
+
+    // ============================================
+    // QUESTION STATS (tracking de perguntas usadas)
+    // ============================================
+    
+    getQuestionStats() {
+        try {
+            const data = localStorage.getItem(this.KEYS.QUESTION_STATS);
+            return data ? JSON.parse(data) : {};
+        } catch (e) {
+            console.error('Error loading question stats:', e);
+            return {};
+        }
+    },
+    
+    saveQuestionStats(stats) {
+        try {
+            localStorage.setItem(this.KEYS.QUESTION_STATS, JSON.stringify(stats));
+            return true;
+        } catch (e) {
+            console.error('Error saving question stats:', e);
+            return false;
+        }
+    },
+    
+    markQuestionUsed(questionId) {
+        const stats = this.getQuestionStats();
+        stats[questionId] = (stats[questionId] || 0) + 1;
+        return this.saveQuestionStats(stats);
+    },
+    
+    getQuestionUsageCount(questionId) {
+        const stats = this.getQuestionStats();
+        return stats[questionId] || 0;
     },
 
     addQuestion(question) {
@@ -198,6 +234,7 @@ const Sync = {
     // Tipos de eventos
     EVENTS: {
         REVEAL_ANSWER: 'reveal_answer',
+        REVEAL_QUESTION: 'reveal_question',
         ADD_STRIKE: 'add_strike',
         UPDATE_SCORE: 'update_score',
         CHANGE_TEAM: 'change_team',
@@ -210,7 +247,11 @@ const Sync = {
         RESUME_GAME: 'resume_game',
         USE_POWERUP: 'use_powerup',
         PLAY_SOUND: 'play_sound',
-        SYNC_STATE: 'sync_state'
+        SYNC_STATE: 'sync_state',
+        STEAL_SUCCESS: 'steal_success',
+        STEAL_FAIL: 'steal_fail',
+        WRONG_GUESS: 'wrong_guess',
+        AWARD_POINTS: 'award_points'
     }
 };
 

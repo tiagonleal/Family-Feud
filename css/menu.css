@@ -86,6 +86,18 @@
     transform: translateY(0) scale(0.98);
 }
 
+.menu-btn.danger {
+    background: linear-gradient(180deg, #c62828 0%, #8b0000 100%);
+    border-color: #ff6b6b;
+}
+
+.menu-btn.danger:hover {
+    background: linear-gradient(180deg, #e53935 0%, #c62828 100%);
+    box-shadow: 
+        0 10px 30px rgba(0,0,0,0.4),
+        0 0 20px rgba(255,107,107,0.3);
+}
+
 .btn-icon {
     font-size: 2rem;
 }
