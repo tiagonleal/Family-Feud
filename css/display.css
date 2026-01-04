@@ -1,0 +1,562 @@
+/* ============================================
+   FAMILY FEUD - DISPLAY STYLES
+   Visual clássico do programa
+   ============================================ */
+
+body {
+    overflow: hidden;
+    cursor: none;
+}
+
+.display-container {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: 
+        radial-gradient(ellipse at center, #1a237e 0%, #0d1442 70%, #000 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ============================================
+   DECORATIVE ELEMENTS
+   ============================================ */
+
+.display-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0,0,0,0.1) 2px,
+            rgba(0,0,0,0.1) 4px
+        );
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* ============================================
+   TITLE AREA
+   ============================================ */
+
+.title-area {
+    padding: 10px 0;
+    text-align: center;
+    display: none;
+}
+
+.title-area.visible {
+    display: block;
+    animation: slideIn 0.5s ease;
+}
+
+.main-logo {
+    display: inline-block;
+}
+
+.logo-text {
+    font-family: var(--font-display);
+    font-size: 4rem;
+    color: var(--gold);
+    text-shadow: 
+        3px 3px 0 var(--gold-dark),
+        6px 6px 0 rgba(0,0,0,0.5);
+    line-height: 0.9;
+    letter-spacing: 5px;
+}
+
+.logo-feud {
+    font-size: 5rem;
+}
+
+/* ============================================
+   SCOREBOARD
+   ============================================ */
+
+.scoreboard {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 30px;
+    gap: 20px;
+}
+
+.team-panel {
+    flex: 1;
+    background: linear-gradient(180deg, #0d1b4c 0%, #071030 100%);
+    border: 6px solid var(--gold);
+    border-radius: 15px;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 
+        0 0 30px rgba(255,215,0,0.2),
+        inset 0 0 30px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
+}
+
+.team-panel.active {
+    animation: glow 1.5s ease-in-out infinite;
+    border-color: #fff;
+    box-shadow: 
+        0 0 50px rgba(255,215,0,0.5),
+        inset 0 0 30px rgba(255,215,0,0.1);
+}
+
+.team-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.team-name {
+    font-size: 1.8rem;
+    color: var(--gold);
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    letter-spacing: 2px;
+}
+
+.team-powerups {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.team-powerups .powerup-icon {
+    font-size: 1.2rem;
+    opacity: 1;
+    transition: all 0.3s ease;
+}
+
+.team-powerups .powerup-icon.used {
+    opacity: 0.3;
+    filter: grayscale(100%);
+}
+
+.team-score {
+    font-family: var(--font-display);
+    font-size: 4rem;
+    color: var(--white);
+    text-shadow: 
+        0 0 20px rgba(255,255,255,0.5),
+        3px 3px 6px rgba(0,0,0,0.8);
+    min-width: 120px;
+    text-align: right;
+}
+
+/* ============================================
+   ROUND INFO
+   ============================================ */
+
+.round-info {
+    text-align: center;
+    padding: 5px 0;
+}
+
+.round-number {
+    font-size: 1.5rem;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+}
+
+.round-multiplier {
+    margin-left: 15px;
+    padding: 5px 15px;
+    background: var(--gold);
+    color: var(--black);
+    font-weight: bold;
+    border-radius: 20px;
+    display: none;
+}
+
+.round-multiplier.visible {
+    display: inline-block;
+    animation: bounceIn 0.5s ease;
+}
+
+/* ============================================
+   GAME AREA
+   ============================================ */
+
+.game-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+}
+
+/* ============================================
+   QUESTION DISPLAY
+   ============================================ */
+
+.question-display {
+    width: 100%;
+    max-width: 1200px;
+    margin-bottom: 30px;
+    display: none;
+}
+
+.question-display.visible {
+    display: block;
+    animation: slideIn 0.5s ease;
+}
+
+.question-text {
+    font-size: 2.5rem;
+    text-align: center;
+    color: var(--white);
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 20px 40px;
+    background: linear-gradient(180deg, rgba(13,27,76,0.9) 0%, rgba(7,16,48,0.9) 100%);
+    border: 4px solid var(--gold);
+    border-radius: 15px;
+}
+
+/* ============================================
+   ANSWER BOARD
+   ============================================ */
+
+.answer-board {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1400px;
+}
+
+.board-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.answer-panel {
+    display: flex;
+    align-items: center;
+    height: 80px;
+    background: linear-gradient(90deg, #1a3a6e 0%, #2a4a8e 50%, #1a3a6e 100%);
+    border: 5px solid var(--gold);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 
+        0 0 20px rgba(255,215,0,0.2),
+        inset 0 0 30px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+.answer-panel.hidden {
+    background: linear-gradient(180deg, #1565c0 0%, #0d47a1 100%);
+    cursor: default;
+}
+
+.answer-panel.revealed {
+    animation: flipIn 0.6s ease;
+}
+
+.answer-num {
+    width: 70px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--black);
+    font-weight: bold;
+}
+
+.answer-panel.hidden .answer-num {
+    width: 100%;
+    background: transparent;
+    color: var(--white);
+    font-size: 3.5rem;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+}
+
+.answer-content {
+    flex: 1;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+}
+
+.answer-text {
+    font-size: 1.8rem;
+    color: var(--white);
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    letter-spacing: 1px;
+}
+
+.answer-points {
+    width: 100px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    color: var(--black);
+    font-weight: bold;
+}
+
+.answer-panel.hidden .answer-content,
+.answer-panel.hidden .answer-points {
+    display: none;
+}
+
+/* ============================================
+   ROUND POINTS
+   ============================================ */
+
+.round-points {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    display: none;
+}
+
+.round-points.visible {
+    display: block;
+}
+
+.round-points-value {
+    font-family: var(--font-display);
+    font-size: 8rem;
+    color: var(--gold);
+    text-shadow: 
+        0 0 50px rgba(255,215,0,0.8),
+        5px 5px 10px rgba(0,0,0,0.8);
+    background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%);
+    padding: 30px 60px;
+    border: 8px solid var(--gold);
+    border-radius: 20px;
+}
+
+/* ============================================
+   POINTS POPUP
+   ============================================ */
+
+.points-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 200;
+    transition: transform 0.3s ease;
+}
+
+.points-popup.active {
+    transform: translate(-50%, -50%) scale(1);
+    animation: bounceIn 0.5s ease;
+}
+
+.points-value {
+    font-family: var(--font-display);
+    font-size: 12rem;
+    color: var(--gold);
+    text-shadow: 
+        0 0 80px rgba(255,215,0,1),
+        0 0 120px rgba(255,215,0,0.8),
+        8px 8px 16px rgba(0,0,0,0.8);
+}
+
+/* ============================================
+   STRIKES OVERLAY
+   ============================================ */
+
+.strikes-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    pointer-events: none;
+    z-index: 300;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.strikes-overlay.active {
+    opacity: 1;
+}
+
+.strike-x {
+    font-size: 20rem;
+    color: var(--red);
+    text-shadow: 
+        0 0 50px rgba(198,40,40,1),
+        0 0 100px rgba(198,40,40,0.8),
+        10px 10px 20px rgba(0,0,0,0.8);
+    transform: scale(0);
+    transition: transform 0.3s ease;
+}
+
+.strike-x.visible {
+    animation: strike 0.5s ease forwards;
+}
+
+/* ============================================
+   TIMER DISPLAY
+   ============================================ */
+
+.timer-display {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: none;
+    z-index: 50;
+}
+
+.timer-display.visible {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+.timer-value {
+    font-family: var(--font-display);
+    font-size: 5rem;
+    color: var(--white);
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+    background: linear-gradient(180deg, rgba(13,27,76,0.9) 0%, rgba(7,16,48,0.9) 100%);
+    border: 5px solid var(--gold);
+    border-radius: 15px;
+    padding: 10px 30px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.timer-value.warning {
+    color: var(--gold);
+    border-color: var(--gold);
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+.timer-value.danger {
+    color: var(--red);
+    border-color: var(--red);
+    animation: pulse 0.3s ease-in-out infinite;
+}
+
+/* ============================================
+   WINNER OVERLAY
+   ============================================ */
+
+.winner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+}
+
+.winner-overlay.active {
+    display: flex;
+    animation: fadeIn 0.5s ease;
+}
+
+.winner-content {
+    text-align: center;
+    animation: bounceIn 0.8s ease;
+}
+
+.winner-content h1 {
+    font-size: 5rem;
+    color: var(--gold);
+    text-shadow: 0 0 50px rgba(255,215,0,0.8);
+    margin-bottom: 30px;
+}
+
+.winner-team {
+    font-size: 4rem;
+    color: var(--white);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.winner-score {
+    font-size: 8rem;
+    font-family: var(--font-display);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,215,0,0.5);
+}
+
+/* ============================================
+   PAUSE OVERLAY
+   ============================================ */
+
+.pause-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 400;
+}
+
+.pause-overlay.active {
+    display: flex;
+}
+
+.pause-content {
+    text-align: center;
+}
+
+.pause-icon {
+    font-size: 8rem;
+    margin-bottom: 20px;
+}
+
+.pause-content h2 {
+    font-size: 3rem;
+    color: var(--gold);
+    letter-spacing: 10px;
+}
+
+/* ============================================
+   CONFETTI (for winner)
+   ============================================ */
+
+@keyframes confetti-fall {
+    0% { transform: translateY(-100vh) rotate(0deg); }
+    100% { transform: translateY(100vh) rotate(720deg); }
+}
+
+.confetti {
+    position: fixed;
+    width: 15px;
+    height: 15px;
+    top: -20px;
+    z-index: 600;
+    animation: confetti-fall linear forwards;
+}

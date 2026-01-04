@@ -1,0 +1,447 @@
+/* ============================================
+   FAMILY FEUD - COMMON STYLES
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Cores do Family Feud tradicional */
+    --primary-blue: #1a237e;
+    --secondary-blue: #283593;
+    --accent-blue: #3949ab;
+    --light-blue: #5c6bc0;
+    --gold: #ffd700;
+    --gold-dark: #b8860b;
+    --red: #c62828;
+    --red-dark: #8b0000;
+    --green: #2e7d32;
+    --white: #ffffff;
+    --black: #000000;
+    --panel-bg: #0d1b4c;
+    --panel-border: #ffd700;
+    --text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    
+    /* Fontes */
+    --font-main: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+    --font-display: 'Impact', 'Arial Black', sans-serif;
+}
+
+body {
+    font-family: var(--font-main);
+    background: linear-gradient(180deg, var(--primary-blue) 0%, var(--secondary-blue) 50%, var(--primary-blue) 100%);
+    min-height: 100vh;
+    color: var(--white);
+    overflow-x: hidden;
+}
+
+/* ============================================
+   ANIMAÇÕES
+   ============================================ */
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px var(--gold), 0 0 10px var(--gold); }
+    50% { box-shadow: 0 0 20px var(--gold), 0 0 30px var(--gold); }
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes flipIn {
+    0% { transform: rotateX(90deg); opacity: 0; }
+    100% { transform: rotateX(0deg); opacity: 1; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes strike {
+    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+    50% { transform: scale(1.3) rotate(0deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ============================================
+   COMPONENTES COMUNS
+   ============================================ */
+
+.btn {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-family: var(--font-main);
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--black);
+    border: 3px solid var(--gold);
+}
+
+.btn-danger {
+    background: linear-gradient(180deg, var(--red) 0%, var(--red-dark) 100%);
+    color: var(--white);
+    border: 3px solid var(--red);
+}
+
+.btn-success {
+    background: linear-gradient(180deg, var(--green) 0%, #1b5e20 100%);
+    color: var(--white);
+    border: 3px solid var(--green);
+}
+
+/* ============================================
+   PAINEL DE RESPOSTAS (Estilo clássico)
+   ============================================ */
+
+.answer-board {
+    background: linear-gradient(180deg, #0a1628 0%, #152238 50%, #0a1628 100%);
+    border: 8px solid var(--gold);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 
+        0 0 30px rgba(255,215,0,0.3),
+        inset 0 0 50px rgba(0,0,0,0.5);
+}
+
+.answer-row {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    background: linear-gradient(90deg, #1a3a6e 0%, #2a4a7e 50%, #1a3a6e 100%);
+    border: 4px solid var(--gold);
+    border-radius: 10px;
+    overflow: hidden;
+    min-height: 70px;
+}
+
+.answer-number {
+    width: 60px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--black);
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: var(--font-display);
+}
+
+.answer-text {
+    flex: 1;
+    padding: 0 20px;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    text-shadow: var(--text-shadow);
+    display: flex;
+    align-items: center;
+}
+
+.answer-points {
+    width: 100px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    color: var(--black);
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: var(--font-display);
+}
+
+.answer-hidden {
+    background: linear-gradient(180deg, #2196f3 0%, #1565c0 100%);
+    justify-content: center;
+}
+
+.answer-hidden .answer-text,
+.answer-hidden .answer-points {
+    display: none;
+}
+
+.answer-hidden .answer-number {
+    width: 100%;
+    background: transparent;
+    color: var(--white);
+    font-size: 3rem;
+}
+
+/* ============================================
+   SCOREBOARD
+   ============================================ */
+
+.scoreboard {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    gap: 20px;
+}
+
+.team-score {
+    flex: 1;
+    background: linear-gradient(180deg, var(--panel-bg) 0%, #0a1230 100%);
+    border: 5px solid var(--gold);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(255,215,0,0.2);
+}
+
+.team-name {
+    font-size: 1.5rem;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    text-shadow: var(--text-shadow);
+}
+
+.team-points {
+    font-size: 4rem;
+    font-family: var(--font-display);
+    color: var(--white);
+    text-shadow: var(--text-shadow);
+}
+
+.team-active {
+    animation: glow 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   STRIKES (X)
+   ============================================ */
+
+.strikes-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.strike {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: var(--red);
+    opacity: 0;
+    text-shadow: 0 0 10px var(--red);
+}
+
+.strike.active {
+    animation: strike 0.5s ease-out forwards;
+}
+
+/* ============================================
+   MODAL
+   ============================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background: linear-gradient(180deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
+    border: 5px solid var(--gold);
+    border-radius: 20px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 3px solid var(--gold);
+}
+
+.modal-header h2 {
+    color: var(--gold);
+    font-size: 1.8rem;
+}
+
+.close-btn {
+    width: 40px;
+    height: 40px;
+    background: var(--red);
+    border: none;
+    border-radius: 50%;
+    color: var(--white);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: var(--red-dark);
+    transform: scale(1.1);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding: 20px;
+    border-top: 3px solid var(--gold);
+}
+
+/* ============================================
+   TIMER
+   ============================================ */
+
+.timer-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.timer {
+    font-size: 5rem;
+    font-family: var(--font-display);
+    color: var(--white);
+    text-shadow: var(--text-shadow);
+    padding: 20px 40px;
+    background: linear-gradient(180deg, var(--panel-bg) 0%, #0a1230 100%);
+    border: 5px solid var(--gold);
+    border-radius: 15px;
+}
+
+.timer.warning {
+    color: var(--gold);
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+.timer.danger {
+    color: var(--red);
+    animation: pulse 0.3s ease-in-out infinite;
+}
+
+/* ============================================
+   POWER-UPS
+   ============================================ */
+
+.powerups-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.powerup {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.powerup.pass {
+    background: linear-gradient(180deg, #ff9800 0%, #e65100 100%);
+    border: 2px solid #ff9800;
+}
+
+.powerup.extra {
+    background: linear-gradient(180deg, #9c27b0 0%, #6a1b9a 100%);
+    border: 2px solid #9c27b0;
+}
+
+.powerup:hover:not(.used) {
+    transform: scale(1.1);
+}
+
+.powerup.used {
+    opacity: 0.4;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+/* ============================================
+   SCROLLBAR CUSTOM
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--primary-blue);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-dark);
+}

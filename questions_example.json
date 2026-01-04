@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1735999001,
+    "text": "Diz uma coisa que as pessoas fazem quando estão nervosas",
+    "answers": [
+      { "text": "Roer as unhas", "points": 35 },
+      { "text": "Suar", "points": 25 },
+      { "text": "Tremer", "points": 15 },
+      { "text": "Andar de um lado para o outro", "points": 10 },
+      { "text": "Gaguejar", "points": 8 },
+      { "text": "Mexer no cabelo", "points": 5 },
+      { "text": "Rir nervosamente", "points": 2 },
+      { "text": "", "points": 0 }
+    ],
+    "createdAt": "2026-01-04T10:00:00.000Z"
+  },
+  {
+    "id": 1735999002,
+    "text": "Diz uma razão pela qual as pessoas chegam atrasadas ao trabalho",
+    "answers": [
+      { "text": "Trânsito", "points": 40 },
+      { "text": "Acordar tarde", "points": 25 },
+      { "text": "Filhos", "points": 12 },
+      { "text": "Carro avariou", "points": 10 },
+      { "text": "Transportes públicos", "points": 8 },
+      { "text": "Má noite de sono", "points": 3 },
+      { "text": "Esqueceu-se de algo", "points": 2 },
+      { "text": "", "points": 0 }
+    ],
+    "createdAt": "2026-01-04T10:00:00.000Z"
+  },
+  {
+    "id": 1735999003,
+    "text": "Diz uma coisa que encontras numa pizzaria",
+    "answers": [
+      { "text": "Pizza", "points": 45 },
+      { "text": "Forno", "points": 20 },
+      { "text": "Mesas", "points": 12 },
+      { "text": "Menu", "points": 8 },
+      { "text": "Caixas de pizza", "points": 7 },
+      { "text": "Queijo", "points": 5 },
+      { "text": "Empregados", "points": 3 },
+      { "text": "", "points": 0 }
+    ],
+    "createdAt": "2026-01-04T10:00:00.000Z"
+  },
+  {
+    "id": 1735999004,
+    "text": "Diz um animal que vive em África",
+    "answers": [
+      { "text": "Leão", "points": 35 },
+      { "text": "Elefante", "points": 25 },
+      { "text": "Girafa", "points": 15 },
+      { "text": "Zebra", "points": 10 },
+      { "text": "Hipopótamo", "points": 7 },
+      { "text": "Rinoceronte", "points": 5 },
+      { "text": "Gorila", "points": 2 },
+      { "text": "Crocodilo", "points": 1 }
+    ],
+    "createdAt": "2026-01-04T10:00:00.000Z"
+  },
+  {
+    "id": 1735999005,
+    "text": "Diz algo que as pessoas fazem no Ano Novo",
+    "answers": [
+      { "text": "Ver fogo de artifício", "points": 30 },
+      { "text": "Comer passas", "points": 25 },
+      { "text": "Brindar", "points": 18 },
+      { "text": "Beijar alguém", "points": 12 },
+      { "text": "Fazer promessas", "points": 8 },
+      { "text": "Jantar em família", "points": 5 },
+      { "text": "Vestir roupa nova", "points": 2 },
+      { "text": "", "points": 0 }
+    ],
+    "createdAt": "2026-01-04T10:00:00.000Z"
+  },
+  {
+    "id": 1735999006,
+    "text": "Diz uma profissão que usa uniforme",
+    "answers": [
+      { "text": "Polícia", "points": 35 },
+      { "text": "Médico/Enfermeiro", "points": 25 },
+      { "text": "Bombeiro", "points": 15 },
+      { "text": "Militar", "points": 10 },
+      { "text": "Piloto", "points": 7 },
+      { "text": "Chef de cozinha", "points": 5 },
+      { "text": "Carteiro", "points": 2 },
+      { "text": "Segurança", "points": 1 }
+    ],
+    "createdAt": "2026-01-04T10:00:00.000Z"
+  }
+]

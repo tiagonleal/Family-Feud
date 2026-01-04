@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Feud - Painel de Controlo</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/host.css">
+</head>
+<body>
+    <div class="host-container">
+        <!-- Header -->
+        <header class="host-header">
+            <div class="header-left">
+                <h1>🎮 Painel de Controlo</h1>
+                <span class="round-badge" id="roundBadge">Ronda 1</span>
+                <span class="phase-badge" id="phaseBadge">Face-off</span>
+            </div>
+            <div class="header-right">
+                <button class="btn-control pause" id="pauseBtn" onclick="togglePause()">
+                    ⏸️ Pausar
+                </button>
+                <button class="btn-control" onclick="openDisplay()">
+                    🖥️ Abrir Display
+                </button>
+                <button class="btn-control danger" onclick="endGame()">
+                    🏁 Terminar
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="host-content">
+            <!-- Left Panel - Game Control -->
+            <div class="control-panel">
+                <!-- Scoreboard -->
+                <div class="host-scoreboard" id="hostScoreboard">
+                    <!-- Teams rendered here -->
+                </div>
+
+                <!-- Current Question -->
+                <div class="question-panel">
+                    <h2>Pergunta Atual</h2>
+                    <div class="question-box" id="currentQuestion">
+                        <!-- Question text -->
+                    </div>
+                </div>
+
+                <!-- Answers Panel -->
+                <div class="answers-panel">
+                    <div class="answers-panel-header">
+                        <h2>Respostas <span class="answers-hint">(clica para revelar)</span></h2>
+                        <button class="btn-reveal-all" onclick="revealAllAnswers()">👁️ Revelar Todas</button>
+                    </div>
+                    <div class="answers-grid" id="answersGrid">
+                        <!-- Answers rendered here -->
+                    </div>
+                </div>
+
+                <!-- Wrong Answer Input -->
+                <div class="wrong-panel">
+                    <div class="wrong-input-group">
+                        <input type="text" 
+                               id="wrongGuess" 
+                               placeholder="Resposta errada (opcional)..."
+                               onkeypress="handleWrongInput(event)">
+                        <button class="btn-wrong" onclick="addStrike()">
+                            ✕ ERRO
+                        </button>
+                    </div>
+                    <div class="strikes-display" id="strikesDisplay">
+                        <span class="strike-indicator" id="strikeInd1">✕</span>
+                        <span class="strike-indicator" id="strikeInd2">✕</span>
+                        <span class="strike-indicator" id="strikeInd3">✕</span>
+                    </div>
+                    <button class="btn-reset-strikes" onclick="resetStrikes()">🔄 Limpar Strikes</button>
+                </div>
+            </div>
+
+            <!-- Right Panel - Game State -->
+            <div class="state-panel">
+                <!-- Timer Control -->
+                <div class="timer-panel">
+                    <h3>⏱️ Timer</h3>
+                    <div class="timer-display-host">
+                        <span id="timerDisplay">20</span>
+                        <span class="timer-unit">seg</span>
+                    </div>
+                    <div class="timer-controls">
+                        <button onclick="startTimer()">▶️ Iniciar</button>
+                        <button onclick="stopTimer()">⏹️ Parar</button>
+                        <button onclick="resetTimer()">🔄 Reset</button>
+                    </div>
+                </div>
+
+                <!-- Round Points -->
+                <div class="points-panel">
+                    <h3>Pontos da Ronda</h3>
+                    <div class="points-display">
+                        <span id="roundPointsDisplay">0</span>
+                        <span class="multiplier-badge" id="multiplierBadge"></span>
+                    </div>
+                    <div class="award-buttons" id="awardButtons">
+                        <!-- Award buttons for each team -->
+                    </div>
+                </div>
+
+                <!-- Team Control -->
+                <div class="team-control">
+                    <h3>Equipa Ativa</h3>
+                    <div class="team-buttons" id="teamButtons">
+                        <!-- Team buttons rendered here -->
+                    </div>
+                </div>
+
+                <!-- Power-ups -->
+                <div class="powerups-panel">
+                    <h3>Power-ups</h3>
+                    <div class="powerups-grid" id="powerupsGrid">
+                        <!-- Powerups rendered here -->
+                    </div>
+                </div>
+
+                <!-- Round Control -->
+                <div class="round-control">
+                    <h3>Controlo de Ronda</h3>
+                    <button class="btn-next-round" onclick="nextRound()" id="nextRoundBtn">
+                        Próxima Ronda ➡️
+                    </button>
+                    <button class="btn-steal" onclick="enableSteal()" id="stealBtn">
+                        🏴‍☠️ Modo Roubar
+                    </button>
+                </div>
+
+                <!-- Game Log -->
+                <div class="log-panel">
+                    <h3>📋 Histórico</h3>
+                    <div class="log-entries" id="logEntries">
+                        <!-- Log entries -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h2 id="confirmTitle">Confirmar</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeConfirm()">Cancelar</button>
+                <button class="btn-start" id="confirmBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/sounds.js"></script>
+    <script src="js/host.js"></script>
+</body>
+</html>

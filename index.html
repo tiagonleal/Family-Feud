@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Feud</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/menu.css">
+</head>
+<body>
+    <div class="menu-container">
+        <div class="logo-container">
+            <h1 class="logo">FAMILY</h1>
+            <h1 class="logo logo-feud">FEUD</h1>
+        </div>
+        
+        <div class="menu-buttons">
+            <button class="menu-btn" onclick="openNewGame()">
+                <span class="btn-icon">🎮</span>
+                Novo Jogo
+            </button>
+            <button class="menu-btn" onclick="openEditor()">
+                <span class="btn-icon">✏️</span>
+                Editor de Perguntas
+            </button>
+            <button class="menu-btn" onclick="continueGame()" id="continueBtn" style="display: none;">
+                <span class="btn-icon">▶️</span>
+                Continuar Jogo
+            </button>
+        </div>
+
+        <div class="footer">
+            <p>Family Feud - Edição Familiar</p>
+        </div>
+    </div>
+
+    <!-- Modal Novo Jogo -->
+    <div class="modal" id="newGameModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Configurar Novo Jogo</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Número de Equipas -->
+                <div class="form-group">
+                    <label>Número de Equipas</label>
+                    <div class="team-selector">
+                        <button class="team-num-btn active" data-teams="2">2</button>
+                        <button class="team-num-btn" data-teams="3">3</button>
+                        <button class="team-num-btn" data-teams="4">4</button>
+                    </div>
+                </div>
+
+                <!-- Configuração das Equipas -->
+                <div id="teamsConfig">
+                    <!-- Gerado dinamicamente -->
+                </div>
+
+                <!-- Número de Rondas -->
+                <div class="form-group">
+                    <label>Número de Rondas</label>
+                    <div class="rounds-config">
+                        <div class="round-type">
+                            <span>Rondas Normais (1x)</span>
+                            <div class="number-input">
+                                <button onclick="changeRounds('normal', -1)">-</button>
+                                <input type="number" id="normalRounds" value="3" min="0" max="20">
+                                <button onclick="changeRounds('normal', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="round-type">
+                            <span>Rondas Duplas (2x)</span>
+                            <div class="number-input">
+                                <button onclick="changeRounds('double', -1)">-</button>
+                                <input type="number" id="doubleRounds" value="2" min="0" max="20">
+                                <button onclick="changeRounds('double', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timer -->
+                <div class="form-group">
+                    <label>Tempo por Resposta (segundos)</label>
+                    <div class="number-input large">
+                        <button onclick="changeTimer(-5)">-5</button>
+                        <input type="number" id="timerSeconds" value="20" min="5" max="120">
+                        <button onclick="changeTimer(5)">+5</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button class="btn-start" onclick="startGame()">Iniciar Jogo</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/menu.js"></script>
+</body>
+</html>

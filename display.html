@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Feud - Display</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/display.css">
+</head>
+<body>
+    <div class="display-container">
+        <!-- Logo/Title Area -->
+        <div class="title-area" id="titleArea">
+            <div class="main-logo">
+                <h1 class="logo-text">FAMILY</h1>
+                <h1 class="logo-text logo-feud">FEUD</h1>
+            </div>
+        </div>
+
+        <!-- Scoreboard -->
+        <div class="scoreboard" id="scoreboard">
+            <!-- Teams will be generated dynamically -->
+        </div>
+
+        <!-- Round Info -->
+        <div class="round-info" id="roundInfo">
+            <span class="round-number">Ronda 1</span>
+            <span class="round-multiplier"></span>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="game-area">
+            <!-- Question Display -->
+            <div class="question-display" id="questionDisplay">
+                <div class="question-text" id="questionText">
+                    <!-- Question appears here -->
+                </div>
+            </div>
+
+            <!-- Answer Board -->
+            <div class="answer-board" id="answerBoard">
+                <!-- Answers 1-4 on left, 5-8 on right -->
+                <div class="board-column" id="leftColumn">
+                    <!-- Answers 1-4 -->
+                </div>
+                <div class="board-column" id="rightColumn">
+                    <!-- Answers 5-8 -->
+                </div>
+            </div>
+
+            <!-- Points Display (center, shows when answer is revealed) -->
+            <div class="points-popup" id="pointsPopup">
+                <span class="points-value">0</span>
+            </div>
+        </div>
+
+        <!-- Strikes Display -->
+        <div class="strikes-overlay" id="strikesOverlay">
+            <div class="strike-x" id="strike1">✕</div>
+            <div class="strike-x" id="strike2">✕</div>
+            <div class="strike-x" id="strike3">✕</div>
+        </div>
+
+        <!-- Timer Display -->
+        <div class="timer-display" id="timerDisplay">
+            <div class="timer-value" id="timerValue">20</div>
+        </div>
+
+        <!-- Round Points (accumulated) -->
+        <div class="round-points" id="roundPoints">
+            <span class="round-points-value">0</span>
+        </div>
+
+        <!-- Winner Celebration -->
+        <div class="winner-overlay" id="winnerOverlay">
+            <div class="winner-content">
+                <h1>🎉 VENCEDOR 🎉</h1>
+                <div class="winner-team" id="winnerTeam"></div>
+                <div class="winner-score" id="winnerScore"></div>
+            </div>
+        </div>
+
+        <!-- Pause Overlay -->
+        <div class="pause-overlay" id="pauseOverlay">
+            <div class="pause-content">
+                <div class="pause-icon">⏸️</div>
+                <h2>JOGO EM PAUSA</h2>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/sounds.js"></script>
+    <script src="js/display.js"></script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+/* ============================================
+   FAMILY FEUD - MENU STYLES
+   ============================================ */
+
+.menu-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+/* ============================================
+   LOGO
+   ============================================ */
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 60px;
+    animation: bounceIn 0.8s ease-out;
+}
+
+.logo {
+    font-family: var(--font-display);
+    font-size: 6rem;
+    color: var(--gold);
+    text-shadow: 
+        4px 4px 0 var(--gold-dark),
+        8px 8px 0 rgba(0,0,0,0.3),
+        0 0 30px rgba(255,215,0,0.5);
+    letter-spacing: 10px;
+    line-height: 1;
+}
+
+.logo-feud {
+    font-size: 7rem;
+    margin-top: -10px;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.5));
+}
+
+/* ============================================
+   MENU BUTTONS
+   ============================================ */
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    padding: 25px 40px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    font-family: var(--font-main);
+    text-transform: uppercase;
+    background: linear-gradient(180deg, var(--accent-blue) 0%, var(--primary-blue) 100%);
+    border: 4px solid var(--gold);
+    border-radius: 15px;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: var(--text-shadow);
+}
+
+.menu-btn:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 
+        0 10px 30px rgba(0,0,0,0.4),
+        0 0 20px rgba(255,215,0,0.3);
+    background: linear-gradient(180deg, var(--light-blue) 0%, var(--accent-blue) 100%);
+}
+
+.menu-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-icon {
+    font-size: 2rem;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.footer {
+    margin-top: 60px;
+    text-align: center;
+    color: var(--gold);
+    opacity: 0.7;
+}
+
+/* ============================================
+   MODAL - NEW GAME
+   ============================================ */
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 1.2rem;
+    color: var(--gold);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.team-selector {
+    display: flex;
+    gap: 15px;
+}
+
+.team-num-btn {
+    flex: 1;
+    padding: 20px;
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: var(--font-main);
+    background: linear-gradient(180deg, var(--accent-blue) 0%, var(--primary-blue) 100%);
+    border: 3px solid var(--light-blue);
+    border-radius: 10px;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.team-num-btn:hover {
+    background: linear-gradient(180deg, var(--light-blue) 0%, var(--accent-blue) 100%);
+}
+
+.team-num-btn.active {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border-color: var(--gold);
+    color: var(--black);
+}
+
+/* Team Configuration */
+#teamsConfig {
+    display: grid;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.team-config {
+    background: rgba(0,0,0,0.3);
+    border: 2px solid var(--light-blue);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.team-config h4 {
+    color: var(--gold);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.team-config input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1rem;
+    font-family: var(--font-main);
+    background: rgba(255,255,255,0.1);
+    border: 2px solid var(--light-blue);
+    border-radius: 8px;
+    color: var(--white);
+    margin-bottom: 10px;
+}
+
+.team-config input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 10px rgba(255,215,0,0.3);
+}
+
+.team-config input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.players-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.player-tag {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    background: var(--accent-blue);
+    border-radius: 15px;
+    font-size: 0.9rem;
+}
+
+.player-tag button {
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 2px;
+}
+
+.add-player-btn {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    background: var(--green);
+    border: none;
+    border-radius: 8px;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.add-player-btn:hover {
+    background: #1b5e20;
+}
+
+/* Rounds Configuration */
+.rounds-config {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.round-type {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+}
+
+.number-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.number-input button {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    background: var(--accent-blue);
+    border: 2px solid var(--light-blue);
+    border-radius: 8px;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.number-input button:hover {
+    background: var(--light-blue);
+}
+
+.number-input input {
+    width: 60px;
+    height: 40px;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    font-family: var(--font-main);
+    background: rgba(255,255,255,0.1);
+    border: 2px solid var(--light-blue);
+    border-radius: 8px;
+    color: var(--white);
+}
+
+.number-input input:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.number-input.large input {
+    width: 80px;
+    font-size: 1.5rem;
+}
+
+/* Modal Buttons */
+.btn-cancel {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    font-family: var(--font-main);
+    background: transparent;
+    border: 3px solid var(--light-blue);
+    border-radius: 10px;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.btn-start {
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    font-family: var(--font-main);
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border: 3px solid var(--gold);
+    border-radius: 10px;
+    color: var(--black);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.btn-start:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(255,215,0,0.4);
+}

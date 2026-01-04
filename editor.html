@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Perguntas - Family Feud</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+    <div class="editor-container">
+        <!-- Header -->
+        <header class="editor-header">
+            <div class="header-left">
+                <a href="index.html" class="back-btn">← Voltar</a>
+                <h1>Editor de Perguntas</h1>
+            </div>
+            <div class="header-right">
+                <span class="question-count">
+                    <span id="questionCount">0</span> perguntas
+                </span>
+                <button class="btn-export" onclick="exportQuestions()">
+                    📥 Exportar
+                </button>
+                <button class="btn-import" onclick="document.getElementById('importFile').click()">
+                    📤 Importar
+                </button>
+                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importQuestions(event)">
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="editor-content">
+            <!-- Questions List -->
+            <aside class="questions-sidebar">
+                <div class="sidebar-header">
+                    <h2>Perguntas</h2>
+                    <button class="btn-add" onclick="newQuestion()">+ Nova</button>
+                </div>
+                <div class="questions-list" id="questionsList">
+                    <!-- Generated dynamically -->
+                </div>
+            </aside>
+
+            <!-- Question Editor -->
+            <main class="question-editor" id="questionEditor">
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">❓</div>
+                    <h2>Nenhuma pergunta selecionada</h2>
+                    <p>Seleciona uma pergunta da lista ou cria uma nova.</p>
+                    <button class="btn-primary" onclick="newQuestion()">+ Criar Pergunta</button>
+                </div>
+
+                <div class="editor-form" id="editorForm" style="display: none;">
+                    <div class="form-header">
+                        <input type="text" 
+                               id="questionText" 
+                               class="question-input"
+                               placeholder="Escreve a pergunta aqui..."
+                               oninput="autoSave()">
+                        <button class="btn-delete" onclick="deleteCurrentQuestion()">🗑️ Eliminar</button>
+                    </div>
+
+                    <div class="answers-grid">
+                        <div class="answers-header">
+                            <h3>Respostas</h3>
+                            <button class="btn-sort" onclick="sortAnswers()">📊 Ordenar por Pontos</button>
+                        </div>
+                        <div class="answers-list" id="answersList">
+                            <!-- 8 answer inputs -->
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <div class="auto-save-status">
+                            <span id="saveStatus">✓ Guardado automaticamente</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/editor.js"></script>
+</body>
+</html>
