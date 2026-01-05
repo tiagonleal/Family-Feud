@@ -44,8 +44,8 @@ function initHost() {
     }
     
     // Verificar se o estado do jogo é válido
-    if (!gameState.teams || !gameState.rounds || gameState.rounds.length === 0) {
-        alert('Estado do jogo inválido!');
+    if (!gameState.teams || gameState.teams.length < 2 || !gameState.rounds || gameState.rounds.length === 0) {
+        alert('Estado do jogo inválido! Precisas de pelo menos 2 equipas.');
         Storage.clearGameState();
         window.location.href = 'index.html';
         return;
@@ -185,11 +185,16 @@ function renderAnswers() {
         btnRevealAll.style.display = (allRevealed || round.pointsAwarded) ? 'none' : '';
     }
     
-    container.innerHTML = round.question.answers.map((answer, i) => {
-        if (!answer) answer = { text: '', points: 0 };
+    // Reorganizar respostas para o grid CSS (2 colunas)
+    // O grid coloca items em ordem: [1,5], [2,6], [3,7], [4,8]
+    // Então precisamos intercalar: esquerda[0], direita[0], esquerda[1], direita[1]...
+    const totalAnswers = round.question.answers.length;
+    
+    const renderAnswer = (i) => {
+        const answer = round.question.answers[i] || { text: '', points: 0 };
         const hasText = answer.text && answer.text.trim() !== '';
         const isRevealed = round.revealed[i];
-        const isStolen = round.stolen[i]; // Resposta revelada por roubo (cinzento)
+        const isStolen = round.stolen[i];
         
         if (!hasText) {
             return `
@@ -212,7 +217,40 @@ function renderAnswers() {
                 </div>
             </div>
         `;
-    }).join('');
+    };
+    
+    let html = '';
+    
+    if (totalAnswers <= 4) {
+        // 4 ou menos: ordem normal 1,2,3,4
+        for (let i = 0; i < totalAnswers; i++) {
+            html += renderAnswer(i);
+        }
+    } else {
+        // 5-8: intercalar para grid - [1,5], [2,6], [3,7], [4,8]
+        // Esquerda: índices 0,1,2,3  Direita: índices 4,5,6,7
+        const leftCount = 4;
+        const rightCount = totalAnswers - 4;
+        const maxRows = Math.max(leftCount, rightCount);
+        
+        for (let row = 0; row < maxRows; row++) {
+            // Coluna esquerda (índice row)
+            if (row < leftCount) {
+                html += renderAnswer(row);
+            } else {
+                html += '<div class="host-answer empty" style="visibility: hidden;"></div>';
+            }
+            // Coluna direita (índice 4 + row)
+            if (row < rightCount) {
+                html += renderAnswer(4 + row);
+            } else {
+                // Placeholder para manter o grid alinhado
+                html += '<div class="host-answer empty" style="visibility: hidden;"></div>';
+            }
+        }
+    }
+    
+    container.innerHTML = html;
 }
 
 function renderStrikes() {
@@ -418,12 +456,27 @@ function revealAnswer(index) {
     // Log
     addLog(`Revelado: "${answer.text}" (${answer.points} pts)`);
     
-    // Timer automático: reset e iniciar após cada resposta revelada
-    resetTimer();
-    startTimer();
+    // Verificar se todas as respostas foram reveladas
+    const allRevealed = round.question.answers.every((a, i) => {
+        return !a || !a.text || !a.text.trim() || round.revealed[i];
+    });
     
-    // Check if all answers revealed
-    checkRoundComplete();
+    if (allRevealed) {
+        // Última resposta revelada - terminar ronda automaticamente
+        addLog('Todas as respostas reveladas! Ronda terminada.');
+        stopTimer();
+        
+        // Dar pontos automaticamente à equipa controladora após 1.5s
+        setTimeout(() => {
+            if (gameState.controllingTeam !== null && !round.pointsAwarded) {
+                awardPoints(gameState.controllingTeam);
+            }
+        }, 1500);
+    } else {
+        // Timer automático: reset e iniciar após cada resposta revelada
+        resetTimer();
+        startTimer();
+    }
 }
 
 // ============================================
@@ -449,6 +502,8 @@ function showFaceoffPanel() {
     // Remove painel anterior se existir
     const existing = document.getElementById('faceoffPanel');
     if (existing) existing.remove();
+    
+    if (!gameState.teams || gameState.teams.length < 2) return;
     
     let teamButtons = '';
     gameState.teams.forEach((team, i) => {
@@ -518,6 +573,8 @@ function handleFaceoffAnswer(index, answer) {
     faceoffState.waitingForAnswer = false;
     
     const round = gameState.rounds[gameState.currentRound];
+    if (!round || !round.question || !round.question.answers) return;
+    
     const numAnswers = round.question.answers.filter(a => a && a.text && a.text.trim()).length;
     
     if (faceoffState.phase === 'answering') {
@@ -549,6 +606,8 @@ function handleFaceoffAnswer(index, answer) {
     } else if (faceoffState.phase === 'checking-better') {
         // Outra equipa acertou uma resposta
         const currentTeam = gameState.teams[faceoffState.teamsOrder[faceoffState.currentTeamIndex]];
+        if (!currentTeam) return;
+        
         addLog(`✓ ${currentTeam.name} acertou: "${answer.text}" (#${index + 1})`);
         
         // Verificar se é melhor
@@ -577,6 +636,8 @@ function handleFaceoffAnswer(index, answer) {
     } else if (faceoffState.phase === 'answering-other') {
         // Outra equipa (não buzzer) acertou depois do buzzer ter errado
         const currentTeam = gameState.teams[faceoffState.teamsOrder[faceoffState.currentTeamIndex]];
+        if (!currentTeam) return;
+        
         addLog(`✓ ${currentTeam.name} acertou: "${answer.text}" (#${index + 1})`);
         
         faceoffState.bestAnswer = index;
@@ -605,6 +666,8 @@ function handleFaceoffAnswer(index, answer) {
 function canAnyoneGetBetter(currentBest) {
     // Verifica se existe alguma resposta melhor (índice menor) ainda não revelada
     const round = gameState.rounds[gameState.currentRound];
+    if (!round || !round.question || !round.question.answers || !round.revealed) return false;
+    
     for (let i = 0; i < currentBest; i++) {
         const answer = round.question.answers[i];
         if (answer && answer.text && answer.text.trim() && !round.revealed[i]) {
@@ -618,6 +681,7 @@ function askIfBetterAnswer() {
     const nextTeamIndex = faceoffState.teamsOrder[faceoffState.currentTeamIndex];
     const nextTeam = gameState.teams[nextTeamIndex];
     const bestTeam = gameState.teams[faceoffState.bestTeam];
+    if (!nextTeam || !bestTeam) return;
     
     faceoffState.phase = 'checking-better';
     faceoffState.waitingForAnswer = true;
@@ -660,6 +724,8 @@ function faceoffMiss(evt) {
     if (faceoffState.phase === 'answering') {
         // Equipa do buzzer errou
         const team = gameState.teams[faceoffState.buzzerTeam];
+        if (!team) return;
+        
         addLog(`✕ ${team.name} errou!`);
         faceoffState.buzzerAnswer = null;
         
@@ -681,6 +747,8 @@ function faceoffMiss(evt) {
     } else if (faceoffState.phase === 'checking-better') {
         // Equipa tentando bater errou - próxima tenta
         const team = gameState.teams[faceoffState.teamsOrder[faceoffState.currentTeamIndex]];
+        if (!team) return;
+        
         addLog(`✕ ${team.name} errou!`);
         
         faceoffState.currentTeamIndex++;
@@ -710,6 +778,8 @@ function faceoffOtherMiss(evt) {
     Sync.broadcast(Sync.EVENTS.PLAY_SOUND, { sound: 'buzzer' });
     
     const team = gameState.teams[faceoffState.teamsOrder[faceoffState.currentTeamIndex]];
+    if (!team) return;
+    
     addLog(`✕ ${team.name} errou!`);
     
     faceoffState.currentTeamIndex++;
@@ -725,8 +795,13 @@ function faceoffOtherMiss(evt) {
             `<button onclick="faceoffOtherMiss(event)" class="btn-faceoff-wrong">✕ ERROU</button>`
         );
     } else {
-        // Todas erraram - recomeçar alternando
-        allTeamsMissed();
+        // Todas erraram depois de alguém acertar - a que acertou ganha
+        if (faceoffState.bestTeam !== null) {
+            decideFaceoffWinner();
+        } else {
+            // Ninguém acertou nada - recomeçar alternando
+            allTeamsMissed();
+        }
     }
 }
 
@@ -743,36 +818,26 @@ function faceoffDidNotBeat(evt) {
     
     faceoffState.waitingForAnswer = false;
     const team = gameState.teams[faceoffState.teamsOrder[faceoffState.currentTeamIndex]];
+    if (!team) return;
+    
     addLog(`${team.name} não acertou melhor`);
     decideFaceoffWinner();
 }
 
 function allTeamsMissed() {
-    // Todas as equipas erraram - alternar ordem e tentar novamente
-    addLog(`⚠️ Todas erraram! A alternar...`);
+    // Todas as equipas erraram (NENHUMA acertou) - dar vitória à equipa que carregou no buzzer
+    const winnerTeamIndex = faceoffState.buzzerTeam ?? 0;
+    const winnerTeam = gameState.teams[winnerTeamIndex];
     
-    // Rodar a ordem - o antigo segundo vira primeiro, etc.
-    const oldBuzzer = faceoffState.buzzerTeam;
-    faceoffState.buzzerTeam = faceoffState.teamsOrder[0];
+    if (!winnerTeam) return;
     
-    // Reconstruir teamsOrder
-    faceoffState.teamsOrder = [];
-    for (let i = 1; i < gameState.teams.length; i++) {
-        faceoffState.teamsOrder.push((faceoffState.buzzerTeam + i) % gameState.teams.length);
-    }
-    faceoffState.currentTeamIndex = 0;
-    faceoffState.buzzerAnswer = null;
+    addLog(`⚠️ Todas erraram! ${winnerTeam.name} joga por padrão (carregou primeiro).`);
+    
+    // Equipa do buzzer joga
+    faceoffState.bestTeam = winnerTeamIndex;
     faceoffState.bestAnswer = null;
-    faceoffState.bestTeam = null;
     
-    const newFirst = gameState.teams[faceoffState.buzzerTeam];
-    faceoffState.phase = 'answering';
-    faceoffState.waitingForAnswer = true;
-    
-    updateFaceoffPanel(
-        `<strong>${escapeHtml(newFirst.name)}</strong> responde!<br><small>Clica na resposta ou:</small>`,
-        `<button onclick="faceoffMiss(event)" class="btn-faceoff-wrong">✕ ERROU</button>`
-    );
+    showPlayOrPassPanel(winnerTeamIndex);
 }
 
 function decideFaceoffWinner() {
@@ -784,13 +849,15 @@ function decideFaceoffWinner() {
     }
     
     const winnerTeam = gameState.teams[faceoffState.bestTeam];
+    if (!winnerTeam) return;
+    
     addLog(`🏆 ${winnerTeam.name} ganha o face-off com a #${faceoffState.bestAnswer + 1}!`);
     showPlayOrPassPanel(faceoffState.bestTeam);
 }
 
 function showPlayOrPassPanel(teamIndex) {
     const team = gameState.teams[teamIndex];
-    if (!team) return;
+    if (!team || !gameState.teams || gameState.teams.length < 2) return;
     
     hideFaceoffPanel(); // Limpar painel anterior primeiro
     
@@ -879,6 +946,11 @@ function skipQuestion() {
         const round = gameState.rounds[gameState.currentRound];
         if (!round || !round.question) return;
         
+        // Limpar estados antes de saltar
+        hideFaceoffPanel();
+        disableSteal();
+        stopTimer();
+        
         // Marcar pergunta como usada
         if (round.question.id) {
             Storage.markQuestionUsed(round.question.id);
@@ -914,11 +986,26 @@ function revealAllAnswers() {
     const round = gameState.rounds[gameState.currentRound];
     if (!round || !round.question || !round.question.answers || !round.revealed) return;
     
+    // Não permitir revelar todas durante face-off
+    if (gameState.phase === 'faceoff') {
+        showAlert('Erro', 'Não podes revelar todas as respostas durante o face-off!');
+        return;
+    }
+    
+    // Não permitir revelar todas em modo roubar
+    if (isStealMode) {
+        showAlert('Erro', 'Não podes revelar todas em modo roubar!');
+        return;
+    }
+    
     showConfirm('Revelar Todas?', 'Revelar todas as respostas restantes?', () => {
         // Revelar cada resposta com um pequeno delay para animação
         let delay = 0;
+        let lastIndex = -1;
+        
         round.question.answers.forEach((answer, i) => {
             if (answer && answer.text && answer.text.trim() && !round.revealed[i]) {
+                lastIndex = i; // Guardar o índice da última
                 setTimeout(() => {
                     round.revealed[i] = true;
                     Storage.saveGameState(gameState);
@@ -931,11 +1018,28 @@ function revealAllAnswers() {
             }
         });
         
-        addLog('Todas as respostas reveladas!');
+        // Após revelar todas, terminar ronda automaticamente
+        if (lastIndex >= 0) {
+            setTimeout(() => {
+                addLog('Todas as respostas reveladas! Ronda terminada.');
+                stopTimer();
+                
+                // Dar pontos automaticamente à equipa controladora
+                if (gameState.controllingTeam !== null && !round.pointsAwarded) {
+                    awardPoints(gameState.controllingTeam);
+                }
+            }, delay + 500);
+        }
     });
 }
 
 function addStrike() {
+    // Não permitir strikes durante face-off
+    if (gameState.phase === 'faceoff') {
+        showAlert('Erro', 'Não podes adicionar strikes durante o face-off! Usa os botões "ERROU".');
+        return;
+    }
+    
     // No modo roubar, um erro = roubo falhado
     if (isStealMode) {
         stealFail();
@@ -969,10 +1073,12 @@ function addStrike() {
     // Update UI
     renderStrikes();
     
-    // Reset timer automaticamente
+    // Reset e reiniciar timer após cada strike
     if (timerInterval) {
         stopTimer();
     }
+    resetTimer();
+    startTimer();
     
     // 3 strikes = modo roubar automático
     if (gameState.strikes >= 3) {
@@ -994,9 +1100,11 @@ function resetStrikes() {
     Sync.broadcast(Sync.EVENTS.ADD_STRIKE, { count: 0 });
     renderStrikes();
     
-    // Reset e reiniciar timer
-    resetTimer();
-    startTimer();
+    // Reset e reiniciar timer APENAS se não estiver em modo roubar OU face-off
+    if (!isStealMode && gameState.phase !== 'faceoff') {
+        resetTimer();
+        startTimer();
+    }
     
     addLog('Strikes limpos');
 }
@@ -1090,7 +1198,7 @@ function awardPoints(teamIndex) {
 
 function usePowerup(teamIndex, powerup) {
     const team = gameState.teams[teamIndex];
-    if (!team || !team.powerups || !team.powerups[powerup]) return;
+    if (!team || !team.powerups || !team.powerups[powerup] || gameState.teams.length < 2) return;
     
     // Mark as used
     team.powerups[powerup] = false;
@@ -1112,6 +1220,7 @@ function usePowerup(teamIndex, powerup) {
         if (gameState.strikes > 0) {
             gameState.strikes--;
             Storage.saveGameState(gameState);
+            Sync.broadcast(Sync.EVENTS.ADD_STRIKE, { count: gameState.strikes });
             renderStrikes();
         }
     }
@@ -1124,6 +1233,23 @@ function usePowerup(teamIndex, powerup) {
 // ============================================
 
 function enableSteal() {
+    // Não permitir modo roubar durante face-off
+    if (gameState.phase === 'faceoff') {
+        showAlert('Erro', 'Não podes ativar modo roubar durante o face-off!');
+        return;
+    }
+    
+    // Validar que há pelo menos 2 equipas
+    if (!gameState.teams || gameState.teams.length < 2) {
+        showAlert('Erro', 'É necessário pelo menos 2 equipas para modo roubar!');
+        return;
+    }
+    
+    // Não permitir se já está em modo roubar
+    if (isStealMode) {
+        return;
+    }
+    
     isStealMode = true;
 
     // Garantir que o timer para ao entrar em modo roubar
@@ -1150,9 +1276,10 @@ function enableSteal() {
     
     updateRoundInfo();
     
-    // Reset strikes for steal attempt
+    // Limpar strikes localmente (não broadcast para evitar conflitos)
     gameState.strikes = 0;
     Storage.saveGameState(gameState);
+    Sync.broadcast(Sync.EVENTS.ADD_STRIKE, { count: 0 });
     renderStrikes();
     
     // Show steal panel
@@ -1183,6 +1310,11 @@ function disableSteal() {
 function stealSuccess(correctIndex) {
     const round = gameState.rounds[gameState.currentRound];
     if (!round || !round.question || !round.question.answers || !round.revealed) return;
+    
+    // Verificar se já foram atribuídos pontos (proteção contra dupla chamada)
+    if (round.pointsAwarded) {
+        return;
+    }
     
     const stealingTeam = gameState.teams[gameState.controllingTeam];
     const multiplier = round.multiplier || 1;
@@ -1248,17 +1380,44 @@ function stealSuccess(correctIndex) {
     addLog('Ronda terminada!');
 }
 
-// Roubo falhado: ninguém ganha os pontos, revelar resto a cinzento
+// Roubo falhado: pontos vão para a equipa que perdeu os 3 strikes
 function stealFail() {
     const round = gameState.rounds[gameState.currentRound];
     if (!round || !round.question || !round.question.answers || !round.revealed) return;
     
-    addLog('❌ Roubo falhado! Ninguém ganha os pontos desta ronda.');
-
+    // Verificar se já foram atribuídos pontos (proteção contra dupla chamada)
+    if (round.pointsAwarded) {
+        return;
+    }
+    
     // Parar timer quando a ronda termina (modo roubar)
     stopTimer();
     
-    // Marcar ronda como terminada (sem pontos atribuídos a ninguém)
+    // A equipa que rouba é a controllingTeam atual
+    // A equipa que tinha os 3 strikes é a anterior (circular)
+    const stealingTeamIndex = gameState.controllingTeam ?? 0;
+    const strikeTeamIndex = (stealingTeamIndex - 1 + gameState.teams.length) % gameState.teams.length;
+    const strikeTeam = gameState.teams[strikeTeamIndex];
+    
+    // Calcular pontos revelados (excluindo stolen)
+    const multiplier = round.multiplier || 1;
+    let points = 0;
+    round.question.answers.forEach((ans, i) => {
+        if (round.revealed[i] && !round.stolen?.[i] && ans && ans.points) {
+            points += ans.points * multiplier;
+        }
+    });
+    
+    // Dar pontos à equipa que tinha os 3 strikes
+    if (strikeTeam && points > 0) {
+        if (typeof strikeTeam.score !== 'number') strikeTeam.score = 0;
+        strikeTeam.score += points;
+        addLog(`❌ Roubo falhado! ${strikeTeam.name} fica com ${points} pontos.`);
+    } else {
+        addLog('❌ Roubo falhado!');
+    }
+    
+    // Marcar ronda como terminada
     round.pointsAwarded = true;
     
     // Marcar TODAS as respostas não reveladas como stolen (cinzento)
@@ -1277,7 +1436,11 @@ function stealFail() {
     
     // Salvar e sincronizar
     Storage.saveGameState(gameState);
-    Sync.broadcast(Sync.EVENTS.STEAL_FAIL, { stolen: round.stolen });
+    Sync.broadcast(Sync.EVENTS.STEAL_FAIL, { 
+        stolen: round.stolen,
+        strikeTeamIndex: strikeTeamIndex,
+        points: points
+    });
     
     // Atualizar UI
     Sync.broadcast(Sync.EVENTS.PLAY_SOUND, { sound: 'buzzer' });
@@ -1308,6 +1471,11 @@ function nextRound() {
     isStealMode = false;
     extraAnswerActive = false;
     
+    // Limpar painéis visuais
+    hideFaceoffPanel();
+    disableSteal();
+    stopTimer();
+    
     // Reset faceoff state
     faceoffState = {
         phase: 'buzzer',
@@ -1323,6 +1491,7 @@ function nextRound() {
     // Save and sync
     Storage.saveGameState(gameState);
     Sync.broadcast(Sync.EVENTS.NEW_ROUND, {});
+    Sync.broadcast(Sync.EVENTS.ADD_STRIKE, { count: 0 }); // Limpar strikes no display
     
     // Reset UI
     disableSteal();

@@ -344,13 +344,88 @@ function createInitialGameState(normalRounds, doubleRounds) {
     };
 }
 
-function openGameWindows() {
-    // Abre a janela do display (para o ecrã grande)
-    const displayWindow = window.open('display.html', 'FamilyFeud_Display', 
-        'width=1920,height=1080,menubar=no,toolbar=no,location=no,status=no,fullscreen=yes');
+async function openGameWindows() {
+    let left = 0;
+    let top = 0;
+    let width = 1920;
+    let height = 1080;
+    let foundSecondScreen = false;
+    
+    // Método 1: Tentar a Window Management API (requer HTTPS e permissão)
+    try {
+        if ('getScreenDetails' in window) {
+            const screenDetails = await window.getScreenDetails();
+            const screens = screenDetails.screens;
+            const currentScreen = screenDetails.currentScreen;
+            
+            // Encontrar um ecrã diferente do atual
+            const secondScreen = screens.find(s => s !== currentScreen);
+            
+            if (secondScreen) {
+                left = secondScreen.availLeft;
+                top = secondScreen.availTop;
+                width = secondScreen.availWidth;
+                height = secondScreen.availHeight;
+                foundSecondScreen = true;
+                console.log('✅ Segundo ecrã detetado via API:', secondScreen.label, 'left:', left);
+            }
+        }
+    } catch (err) {
+        console.log('Window Management API não disponível:', err.message);
+    }
+    
+    // Método 2: Fallback - usar screen.availLeft para detetar monitores
+    if (!foundSecondScreen) {
+        const currentLeft = window.screen.availLeft || 0;
+        const currentWidth = window.screen.availWidth || 1920;
+        
+        console.log('📺 Fallback - screen.availLeft:', currentLeft, 'width:', currentWidth);
+        
+        // Se availLeft > 0, há um monitor à esquerda do principal
+        // Se availLeft < 0, este monitor está à esquerda de outro
+        // Se availLeft = 0, este é o monitor principal ou único
+        
+        if (currentLeft > 0) {
+            // Há monitor(es) à esquerda - abrir lá
+            left = 0;
+            foundSecondScreen = true;
+            console.log('📺 Abrindo display à esquerda (left=0)');
+        } else if (currentLeft < 0) {
+            // Este monitor está à esquerda - abrir à direita
+            left = currentWidth;
+            foundSecondScreen = true;
+            console.log('📺 Abrindo display à direita (left=' + left + ')');
+        } else {
+            // Monitor principal - tentar abrir à direita
+            left = currentWidth;
+            foundSecondScreen = true;
+            console.log('📺 Monitor principal - tentando à direita (left=' + left + ')');
+        }
+        
+        width = currentWidth;
+        height = window.screen.availHeight || 1080;
+    }
+    
+    // Construir string de features
+    const features = `left=${left},top=${top},width=${width},height=${height},menubar=no,toolbar=no,location=no,status=no`;
+    console.log('📺 Abrindo display com features:', features);
+    
+    // Abre a janela do display
+    const displayWindow = window.open('display.html', 'FamilyFeud_Display', features);
     
     if (!displayWindow || displayWindow.closed || typeof displayWindow.closed === 'undefined') {
         alert('⚠️ O browser bloqueou a janela do Display!\n\nPor favor, permite popups para este site e tenta novamente.\n\nAlternativamente, abre display.html manualmente noutra janela/ecrã.');
+    } else {
+        // Tentar mover a janela para garantir posição (alguns browsers ignoram left/top no open)
+        setTimeout(() => {
+            try {
+                displayWindow.moveTo(left, top);
+                displayWindow.resizeTo(width, height);
+                console.log('📺 Janela movida para left=' + left);
+            } catch (e) {
+                console.log('Não foi possível mover/redimensionar janela:', e);
+            }
+        }, 100);
     }
     
     // Redireciona a janela atual para o painel do host

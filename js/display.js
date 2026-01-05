@@ -324,47 +324,47 @@ function renderAnswerBoard(round) {
     }
     
     // Calcular quantas respostas em cada coluna
-    // Se temos 4 ou menos respostas: todas na esquerda, coluna centrada
-    // Se temos 5-8 respostas: dividir entre as duas colunas
-    const leftCount = totalAnswers <= 4 ? totalAnswers : Math.ceil(totalAnswers / 2);
+    // Esquerda: primeiros 4 (ou todas se <=4)
+    // Direita: 5, 6, 7, 8 (se existirem)
     
     let leftHtml = '';
     let rightHtml = '';
     
-    // Renderizar coluna esquerda
-    for (let i = 0; i < leftCount; i++) {
+    // Renderizar respostas: primeiros 4 na esquerda, resto na direita
+    for (let i = 0; i < totalAnswers; i++) {
         const answer = answers[i];
         const isRevealed = round.revealed && round.revealed[i];
         const isStolen = stolen[i]; // Resposta revelada por roubo (cinzento)
         const hasAnswer = answer && answer.text && answer.text.trim() !== '';
         
-        leftHtml += `
-            <div class="answer-panel ${isRevealed ? 'revealed' : 'hidden'} ${isStolen ? 'stolen' : ''}" id="answer${i}">
-                <div class="answer-num">${i + 1}</div>
+        const panelHtml = isRevealed ? `
+            <div class="answer-panel revealed ${isStolen ? 'stolen' : ''}" id="answer${i}">
                 <div class="answer-content">
-                    <span class="answer-text">${hasAnswer && isRevealed ? escapeHtml(answer.text) : ''}</span>
+                    <span class="answer-text">${hasAnswer ? escapeHtml(answer.text) : ''}</span>
                 </div>
-                <div class="answer-points">${hasAnswer && isRevealed ? answer.points : ''}</div>
+                <div class="answer-num-box">
+                    <span class="answer-points-num">${hasAnswer ? answer.points : ''}</span>
+                </div>
+            </div>
+        ` : `
+            <div class="answer-panel hidden" id="answer${i}">
+                <div class="answer-num-box">
+                    <span class="answer-order-num">${i + 1}</span>
+                </div>
             </div>
         `;
-    }
-    
-    // Renderizar coluna direita
-    for (let i = leftCount; i < totalAnswers; i++) {
-        const answer = answers[i];
-        const isRevealed = round.revealed && round.revealed[i];
-        const isStolen = stolen[i]; // Resposta revelada por roubo (cinzento)
-        const hasAnswer = answer && answer.text && answer.text.trim() !== '';
         
-        rightHtml += `
-            <div class="answer-panel ${isRevealed ? 'revealed' : 'hidden'} ${isStolen ? 'stolen' : ''}" id="answer${i}">
-                <div class="answer-num">${i + 1}</div>
-                <div class="answer-content">
-                    <span class="answer-text">${hasAnswer && isRevealed ? escapeHtml(answer.text) : ''}</span>
-                </div>
-                <div class="answer-points">${hasAnswer && isRevealed ? answer.points : ''}</div>
-            </div>
-        `;
+        // Se temos 4 ou menos respostas: todas na esquerda
+        if (totalAnswers <= 4) {
+            leftHtml += panelHtml;
+        } else {
+            // 5-8 respostas: primeiros 4 (índices 0-3) na esquerda, resto (4-7) na direita
+            if (i < 4) {
+                leftHtml += panelHtml;
+            } else {
+                rightHtml += panelHtml;
+            }
+        }
     }
     
     leftColumn.innerHTML = leftHtml;
@@ -379,16 +379,23 @@ function revealAnswer(index, answer) {
     const panel = document.getElementById(`answer${index}`);
     if (!panel) return;
     
-    // Animate reveal
-    panel.classList.remove('hidden');
-    panel.classList.add('revealed');
+    // Obter informação sobre stolen
+    const round = gameState.rounds[gameState.currentRound];
+    if (!round) return;
     
-    // Update content - não atualizar o número porque já está correto do renderAnswerBoard
-    const textEl = panel.querySelector('.answer-text');
-    const pointsEl = panel.querySelector('.answer-points');
+    const isStolen = round.stolen && round.stolen[index];
+    const hasAnswer = answer && answer.text && answer.text.trim() !== '';
     
-    if (textEl) textEl.textContent = answer ? answer.text : '';
-    if (pointsEl) pointsEl.textContent = answer ? answer.points : '';
+    // Recriar o HTML completo do painel quando revelado
+    panel.className = `answer-panel revealed ${isStolen ? 'stolen' : ''}`;
+    panel.innerHTML = `
+        <div class="answer-content">
+            <span class="answer-text">${hasAnswer ? escapeHtml(answer.text) : ''}</span>
+        </div>
+        <div class="answer-num-box">
+            <span class="answer-points-num">${hasAnswer ? answer.points : ''}</span>
+        </div>
+    `;
     
     // Show points popup - passa o índice para posicionar
     if (answer && answer.points) {
@@ -483,27 +490,24 @@ function showStrikes(count) {
     // Show overlay
     overlay.classList.add('active');
     
-    // Reset all strikes first
+    // Mostrar TODOS os strikes até count (não resetar os anteriores)
     for (let i = 1; i <= 3; i++) {
         const strike = document.getElementById(`strike${i}`);
-        if (strike) strike.classList.remove('visible');
+        if (strike) {
+            if (i <= count) {
+                // Adicionar com delay progressivo para animação
+                setTimeout(() => {
+                    strike.classList.add('visible');
+                }, i * 100);
+            } else {
+                strike.classList.remove('visible');
+            }
+        }
     }
     
-    // Show current strike with animation
-    const strike = document.getElementById(`strike${count}`);
-    if (strike) {
-        setTimeout(() => {
-            strike.classList.add('visible');
-        }, 100);
-    }
-    
-    // Hide after delay
+    // Hide overlay after delay (mas manter os strikes visíveis)
     setTimeout(() => {
         overlay.classList.remove('active');
-        for (let i = 1; i <= 3; i++) {
-            const strikeEl = document.getElementById(`strike${i}`);
-            if (strikeEl) strikeEl.classList.remove('visible');
-        }
     }, 2000);
 }
 
@@ -733,8 +737,23 @@ function handleStealFail(data) {
     // Atualizar gameState local
     gameState = Storage.getGameState();
     
-    // Mostrar animação de falha no roubo
-    showStealAnimation(false, null, 0);
+    // Se há pontos, a equipa dos strikes fica com eles
+    if (data.points > 0 && data.strikeTeamIndex !== undefined) {
+        // Mostrar animação - equipa dos strikes ganha
+        const teamName = gameState.teams[data.strikeTeamIndex]?.name || 'Equipa';
+        showStealFailWithPoints(teamName, data.strikeTeamIndex, data.points);
+        
+        // Atualizar scoreboard
+        updateTeamScore(data.strikeTeamIndex, gameState.teams[data.strikeTeamIndex]?.score || 0);
+        
+        // Animar pontos voando para a equipa
+        setTimeout(() => {
+            animatePointsToTeam(data.strikeTeamIndex, data.points, gameState.teams[data.strikeTeamIndex]?.score || 0);
+        }, 1500);
+    } else {
+        // Sem pontos - apenas mostrar falha
+        showStealAnimation(false, null, 0);
+    }
     
     // Renderizar respostas com todas as não-reveladas a cinzento
     renderCurrentRound();
@@ -763,6 +782,31 @@ function showStealAnimation(success, teamIndex, points) {
             </div>
         `;
     }
+    
+    document.body.appendChild(overlay);
+    
+    // Animação de entrada
+    setTimeout(() => overlay.classList.add('active'), 50);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 500);
+    }, 3000);
+}
+
+function showStealFailWithPoints(teamName, teamIndex, points) {
+    const overlay = document.createElement('div');
+    overlay.className = 'steal-overlay';
+    
+    overlay.innerHTML = `
+        <div class="steal-content fail">
+            <div class="steal-icon">❌</div>
+            <div class="steal-text">ROUBO FALHADO!</div>
+            <div class="steal-team">${escapeHtml(teamName)}</div>
+            <div class="steal-subtext">fica com +${points} pontos</div>
+        </div>
+    `;
     
     document.body.appendChild(overlay);
     

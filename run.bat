@@ -20,13 +20,27 @@ if %errorlevel% equ 0 (
     echo    SERVIDOR A CORRER!
     echo    URL: http://localhost:8000
     echo.
-    echo    Para PARAR: Fecha esta janela
+    echo    Para PARAR: Pressiona Ctrl+C
     echo ========================================
     echo.
     timeout /t 3 /nobreak >nul
-    start http://localhost:8000
+    
+    REM Tentar abrir Chrome, senão abre browser padrão
+    if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
+        start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" "http://localhost:8000"
+    ) else if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" (
+        start "" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" "http://localhost:8000"
+    ) else if exist "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" (
+        start "" "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" "http://localhost:8000"
+    ) else (
+        start http://localhost:8000
+    )
+    
     python -m http.server 8000
-    goto end
+    echo.
+    echo [*] Servidor parado!
+    pause
+    exit /b
 )
 
 REM Se Python não existir, tentar Python3
@@ -40,13 +54,27 @@ if %errorlevel% equ 0 (
     echo    SERVIDOR A CORRER!
     echo    URL: http://localhost:8000
     echo.
-    echo    Para PARAR: Fecha esta janela
+    echo    Para PARAR: Pressiona Ctrl+C
     echo ========================================
     echo.
     timeout /t 3 /nobreak >nul
-    start http://localhost:8000
+    
+    REM Tentar abrir Chrome, senão abre browser padrão
+    if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
+        start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" "http://localhost:8000"
+    ) else if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" (
+        start "" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" "http://localhost:8000"
+    ) else if exist "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" (
+        start "" "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" "http://localhost:8000"
+    ) else (
+        start http://localhost:8000
+    )
+    
     python3 -m http.server 8000
-    goto end
+    echo.
+    echo [*] Servidor parado!
+    pause
+    exit /b
 )
 
 REM Se nenhum Python, usar Node.js
@@ -60,21 +88,33 @@ if %errorlevel% equ 0 (
     echo    SERVIDOR A CORRER!
     echo    URL: http://localhost:8000
     echo.
-    echo    Para PARAR: Fecha esta janela
+    echo    Para PARAR: Pressiona Ctrl+C
     echo ========================================
     echo.
     timeout /t 3 /nobreak >nul
-    start http://localhost:8000
+    
+    REM Tentar abrir Chrome, senão abre browser padrão
+    if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
+        start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" "http://localhost:8000"
+    ) else if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" (
+        start "" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" "http://localhost:8000"
+    ) else if exist "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" (
+        start "" "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" "http://localhost:8000"
+    ) else (
+        start http://localhost:8000
+    )
+    
     npx http-server -p 8000 -c-1
-    goto end
+    echo.
+    echo [*] Servidor parado!
+    pause
+    exit /b
 )
 
 REM Se nada funcionou
+echo.
 echo [ERRO] Nenhum servidor encontrado!
 echo [INFO] Por favor instala Python ou Node.js
 echo.
-echo [*] Abrindo index.html diretamente no browser...
-start index.html
 pause
 
-:end

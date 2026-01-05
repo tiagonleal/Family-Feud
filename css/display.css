@@ -236,6 +236,28 @@ body {
     max-width: 1400px;
 }
 
+/* Responsividade do board */
+@media (max-width: 1600px) {
+    .answer-board {
+        max-width: 1200px;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .answer-board {
+        max-width: 1000px;
+        gap: 10px;
+    }
+}
+
+@media (min-width: 2000px) {
+    .answer-board {
+        max-width: 1800px;
+        gap: 25px;
+    }
+}
+
 /* Quando há 4 ou menos respostas - centrar coluna única */
 .answer-board.single-column {
     justify-content: center;
@@ -271,6 +293,25 @@ body {
     transition: all 0.3s ease;
 }
 
+/* Responsividade para diferentes tamanhos de ecrã */
+@media (max-width: 1600px) {
+    .answer-panel {
+        height: 70px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .answer-panel {
+        height: 60px;
+    }
+}
+
+@media (min-width: 2000px) {
+    .answer-panel {
+        height: 100px;
+    }
+}
+
 .answer-panel.hidden {
     background: linear-gradient(180deg, #1565c0 0%, #0d47a1 100%);
     cursor: default;
@@ -280,7 +321,16 @@ body {
     animation: flipIn 0.6s ease;
 }
 
-.answer-num {
+.answer-panel.revealed .answer-num-box {
+    width: 70px;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+}
+
+.answer-panel.revealed .answer-content {
+    display: flex;
+}
+
+.answer-num-box {
     width: 70px;
     height: 100%;
     display: flex;
@@ -288,17 +338,85 @@ body {
     justify-content: center;
     background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
     font-family: var(--font-display);
-    font-size: 2.5rem;
-    color: var(--black);
     font-weight: bold;
+    flex-shrink: 0;
 }
 
-.answer-panel.hidden .answer-num {
+.answer-points-num {
+    font-size: 2.5rem;
+    color: var(--black);
+}
+
+.answer-order-num {
+    font-size: 2.5rem;
+    color: var(--black);
+}
+
+/* Responsividade dos números */
+@media (max-width: 1600px) {
+    .answer-points-num,
+    .answer-order-num {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .answer-points-num,
+    .answer-order-num {
+        font-size: 1.8rem;
+    }
+}
+
+@media (min-width: 2000px) {
+    .answer-points-num,
+    .answer-order-num {
+        font-size: 3rem;
+    }
+}
+
+.answer-panel.hidden .answer-num-box {
     width: 100%;
     background: transparent;
+}
+
+.answer-panel.hidden .answer-order-num {
     color: var(--white);
     font-size: 3.5rem;
     text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+    position: relative;
+}
+
+/* Responsividade do número escondido */
+@media (max-width: 1600px) {
+    .answer-panel.hidden .answer-order-num {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .answer-panel.hidden .answer-order-num {
+        font-size: 2.5rem;
+    }
+}
+
+@media (min-width: 2000px) {
+    .answer-panel.hidden .answer-order-num {
+        font-size: 4rem;
+    }
+}
+
+.answer-panel.hidden .answer-order-num::before {
+    content: '';
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.05) 70%, transparent 100%);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    box-shadow: 0 0 30px rgba(255,255,255,0.2), inset 0 0 20px rgba(255,255,255,0.1);
 }
 
 .answer-content {
@@ -316,21 +434,26 @@ body {
     letter-spacing: 1px;
 }
 
-.answer-points {
-    width: 100px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
-    font-family: var(--font-display);
-    font-size: 2.2rem;
-    color: var(--black);
-    font-weight: bold;
+/* Responsividade do texto */
+@media (max-width: 1600px) {
+    .answer-text {
+        font-size: 1.5rem;
+    }
 }
 
-.answer-panel.hidden .answer-content,
-.answer-panel.hidden .answer-points {
+@media (max-width: 1200px) {
+    .answer-text {
+        font-size: 1.3rem;
+    }
+}
+
+@media (min-width: 2000px) {
+    .answer-text {
+        font-size: 2.2rem;
+    }
+}
+
+.answer-panel.hidden .answer-content {
     display: none;
 }
 
@@ -838,9 +961,9 @@ body {
     background: linear-gradient(180deg, rgba(198,40,40,0.9) 0%, rgba(139,28,28,0.9) 100%);
     border: 3px solid var(--red);
     border-radius: 10px;
-    padding: 8px 20px;
+    padding: 12px 30px;
     font-family: var(--font-display);
-    font-size: 1.4rem;
+    font-size: 2rem;
     color: var(--white);
     text-transform: uppercase;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);

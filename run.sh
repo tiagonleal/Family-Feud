@@ -13,11 +13,22 @@ echo ""
 # Função para abrir browser
 open_browser() {
     sleep 3
-    if command -v open &> /dev/null; then
-        # Mac
+    
+    # Tentar abrir Chrome primeiro, depois browser padrão
+    if command -v google-chrome &> /dev/null; then
+        # Linux - Chrome
+        google-chrome http://localhost:8000 &> /dev/null &
+    elif command -v chromium-browser &> /dev/null; then
+        # Linux - Chromium
+        chromium-browser http://localhost:8000 &> /dev/null &
+    elif [[ "$OSTYPE" == "darwin"* ]] && [[ -d "/Applications/Google Chrome.app" ]]; then
+        # Mac - Chrome
+        open -a "Google Chrome" http://localhost:8000
+    elif command -v open &> /dev/null; then
+        # Mac - browser padrão
         open http://localhost:8000
     elif command -v xdg-open &> /dev/null; then
-        # Linux
+        # Linux - browser padrão
         xdg-open http://localhost:8000
     else
         echo "[INFO] Abre manualmente: http://localhost:8000"
