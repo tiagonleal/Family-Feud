@@ -248,22 +248,43 @@
   },
   {
     "id": 1767544758663,
-    "text": "Diz uma cidade onde odiarias o trânsito para o trabalho",
+    "text": "Diz uma cidade portuguesa onde odiarias apanhar trânsito ou onde os condutores são agressivos",
     "answers": [
       {
-        "text": "Nova Iorque",
+        "text": "Lisboa",
         "points": 53
       },
       {
-        "text": "Los Angeles",
+        "text": "Porto",
         "points": 21
       },
       {
-        "text": "Chicago",
+        "text": "Braga",
         "points": 18
+      },
+      {
+        "text": "Cascais",
+        "points": 5
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
       }
     ],
-    "createdAt": "2026-01-04T16:39:18.650Z"
+    "createdAt": "2026-01-04T16:39:18.650Z",
+    "updatedAt": "2026-01-05T00:01:11.318Z"
   },
   {
     "id": 1767544758664,
@@ -555,19 +576,40 @@
     "text": "Diz uma bebida associada ao Natal",
     "answers": [
       {
-        "text": "Licor de Ovo",
+        "text": "Vinho do Porto",
         "points": 53
       },
       {
-        "text": "Cidra",
+        "text": "Licor Beirão",
         "points": 21
       },
       {
-        "text": "Chocolate Quente",
+        "text": "Vinho Tinto",
         "points": 16
+      },
+      {
+        "text": "Ginjinha",
+        "points": 9
+      },
+      {
+        "text": "Chocolate Quente",
+        "points": 5
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
       }
     ],
-    "createdAt": "2026-01-04T16:39:18.650Z"
+    "createdAt": "2026-01-04T16:39:18.650Z",
+    "updatedAt": "2026-01-05T00:05:49.844Z"
   },
   {
     "id": 1767544758680,
@@ -1779,29 +1821,6 @@
     "createdAt": "2026-01-04T17:00:14.730Z"
   },
   {
-    "id": 1767546014733,
-    "text": "Diz-me uma boa pontuação num jogo de golfe de 18 buracos.",
-    "answers": [
-      {
-        "text": "72",
-        "points": 40
-      },
-      {
-        "text": "65",
-        "points": 27
-      },
-      {
-        "text": "80",
-        "points": 20
-      },
-      {
-        "text": "66",
-        "points": 9
-      }
-    ],
-    "createdAt": "2026-01-04T17:00:14.730Z"
-  },
-  {
     "id": 1767546014734,
     "text": "Diz algo que se pode estragar.",
     "answers": [
@@ -2096,29 +2115,6 @@
       {
         "text": "Chá de Bebé",
         "points": 5
-      }
-    ],
-    "createdAt": "2026-01-04T17:00:14.730Z"
-  },
-  {
-    "id": 1767546014747,
-    "text": "Diz uma razão para um jogador de futebol universitário ser expulso da equipa.",
-    "answers": [
-      {
-        "text": "Esteroides",
-        "points": 55
-      },
-      {
-        "text": "Brigas",
-        "points": 19
-      },
-      {
-        "text": "Mau Feitio",
-        "points": 9
-      },
-      {
-        "text": "Más Notas",
-        "points": 6
       }
     ],
     "createdAt": "2026-01-04T17:00:14.730Z"
@@ -2492,52 +2488,6 @@
     "createdAt": "2026-01-04T17:00:14.730Z"
   },
   {
-    "id": 1767546014764,
-    "text": "Diz uma cidade dos EUA com condutores muito agressivos.",
-    "answers": [
-      {
-        "text": "Nova Iorque",
-        "points": 54
-      },
-      {
-        "text": "Los Angeles",
-        "points": 22
-      },
-      {
-        "text": "Chicago",
-        "points": 19
-      },
-      {
-        "text": "Boston",
-        "points": 3
-      }
-    ],
-    "createdAt": "2026-01-04T17:00:14.730Z"
-  },
-  {
-    "id": 1767546014765,
-    "text": "Diz algo que seria mais difícil de fazer se vivesses em Los Angeles.",
-    "answers": [
-      {
-        "text": "Conduzir",
-        "points": 56
-      },
-      {
-        "text": "Esquiar",
-        "points": 29
-      },
-      {
-        "text": "Dormir",
-        "points": 7
-      },
-      {
-        "text": "Respirar",
-        "points": 6
-      }
-    ],
-    "createdAt": "2026-01-04T17:00:14.730Z"
-  },
-  {
     "id": 1767546014766,
     "text": "Diz algo que as pessoas se esquecem de fazer quando saem de casa à pressa.",
     "answers": [
@@ -2631,26 +2581,43 @@
   },
   {
     "id": 1767546014770,
-    "text": "Diz um estado dos EUA onde odiarias viver no Verão.",
+    "text": "Diz uma cidade ou região de Portugal onde odiarias viver no Verão por causa do calor.",
     "answers": [
       {
-        "text": "Flórida",
+        "text": "Alentejo",
         "points": 41
       },
       {
-        "text": "Arizona",
+        "text": "Santarém",
         "points": 27
       },
       {
-        "text": "Texas",
+        "text": "Castelo Branco",
         "points": 26
       },
       {
-        "text": "Califórnia",
+        "text": "Algarve",
         "points": 5
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
       }
     ],
-    "createdAt": "2026-01-04T17:00:14.730Z"
+    "createdAt": "2026-01-04T17:00:14.730Z",
+    "updatedAt": "2026-01-05T00:02:08.425Z"
   },
   {
     "id": 1767546014771,
@@ -3090,29 +3057,6 @@
     "createdAt": "2026-01-04T17:00:14.730Z"
   },
   {
-    "id": 1767546014790,
-    "text": "Diz um feriado em que a maioria das pessoas trabalha (nos EUA).",
-    "answers": [
-      {
-        "text": "Dia dos Presidentes",
-        "points": 40
-      },
-      {
-        "text": "Dia de Martin Luther King",
-        "points": 26
-      },
-      {
-        "text": "Dia dos Namorados",
-        "points": 18
-      },
-      {
-        "text": "Dia de Colombo",
-        "points": 11
-      }
-    ],
-    "createdAt": "2026-01-04T17:00:14.730Z"
-  },
-  {
     "id": 1767546014791,
     "text": "Como sabes que estás a ouvir uma rádio de música Country?",
     "answers": [
@@ -3367,26 +3311,43 @@
   },
   {
     "id": 1767546014802,
-    "text": "Diz algo que o Chili pode ter ou não.",
+    "text": "Diz um ingrediente que pode ou não ser colocado numa Francesinha.",
     "answers": [
       {
-        "text": "Feijão",
-        "points": 57
+        "text": "Ovo estrelado",
+        "points": 52
       },
       {
-        "text": "Queijo",
+        "text": "Camarão",
         "points": 18
       },
       {
-        "text": "Carne",
+        "text": "Batatas Fritas",
         "points": 13
       },
       {
-        "text": "Bolachas de Água e Sal",
+        "text": "Salsicha",
         "points": 10
+      },
+      {
+        "text": "Esparguete",
+        "points": 5
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
       }
     ],
-    "createdAt": "2026-01-04T17:00:14.730Z"
+    "createdAt": "2026-01-04T17:00:14.730Z",
+    "updatedAt": "2026-01-05T00:07:10.816Z"
   },
   {
     "id": 1767546014803,
@@ -3705,29 +3666,6 @@
       },
       {
         "text": "Segurar a Porta",
-        "points": 5
-      }
-    ],
-    "createdAt": "2026-01-04T17:00:14.730Z"
-  },
-  {
-    "id": 1767546014817,
-    "text": "Diz um apresentador de Talk Show que muitos respeitem.",
-    "answers": [
-      {
-        "text": "Oprah Winfrey",
-        "points": 56
-      },
-      {
-        "text": "Jay Leno",
-        "points": 26
-      },
-      {
-        "text": "David Letterman",
-        "points": 8
-      },
-      {
-        "text": "Dr Phil",
         "points": 5
       }
     ],
@@ -8197,26 +8135,43 @@
   },
   {
     "id": 1767547058585,
-    "text": "Diz um estado que as pessoas visitam para umas férias na neve (EUA)",
+    "text": "Diz um local para onde os portugueses costumam ir quando querem ver neve.",
     "answers": [
       {
-        "text": "Colorado",
+        "text": "Serra da Estrela",
         "points": 54
       },
       {
-        "text": "Vermont",
-        "points": 24
+        "text": "Andorra",
+        "points": 30
       },
       {
-        "text": "Alasca",
+        "text": "Sierra Nevada",
         "points": 10
       },
       {
-        "text": "Utah",
-        "points": 8
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
       }
     ],
-    "createdAt": "2026-01-04T17:17:38.503Z"
+    "createdAt": "2026-01-04T17:17:38.503Z",
+    "updatedAt": "2026-01-05T00:07:53.583Z"
   },
   {
     "id": 1767547058586,
@@ -14889,29 +14844,6 @@
     "createdAt": "2026-01-04T17:31:11.861Z"
   },
   {
-    "id": 1767547871935,
-    "text": "Diz algo que seria mais difícil de fazer se vivesses em Los Angeles.",
-    "answers": [
-      {
-        "text": "Conduzir",
-        "points": 56
-      },
-      {
-        "text": "Esquiar",
-        "points": 29
-      },
-      {
-        "text": "Dormir",
-        "points": 7
-      },
-      {
-        "text": "Respirar",
-        "points": 6
-      }
-    ],
-    "createdAt": "2026-01-04T17:31:11.861Z"
-  },
-  {
     "id": 1767547871936,
     "text": "Perguntámos a 100 Homens: Diz algo que fazes no primeiro encontro, mas não farias passado um ano.",
     "answers": [
@@ -20801,26 +20733,43 @@
   },
   {
     "id": 1767548758234,
-    "text": "Diz uma alcunha para uma mulher chamada Margaret.",
+    "text": "Diz um dos nomes próprios mais comuns para um bebé nascido em Portugal nos últimos anos.",
     "answers": [
       {
-        "text": "Marge",
+        "text": "Maria",
         "points": 36
       },
       {
-        "text": "Maggie",
+        "text": "Francisco",
         "points": 31
       },
       {
-        "text": "Peggy",
+        "text": "Alice",
         "points": 17
       },
       {
-        "text": "Meg",
+        "text": "Lourenço",
         "points": 13
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
       }
     ],
-    "createdAt": "2026-01-04T17:45:58.203Z"
+    "createdAt": "2026-01-04T17:45:58.203Z",
+    "updatedAt": "2026-01-05T00:09:37.885Z"
   },
   {
     "id": 1767548758235,
@@ -20870,26 +20819,43 @@
   },
   {
     "id": 1767548758237,
-    "text": "Diz algo que possas ver num postal do Alasca.",
+    "text": "Diz algo que verias obrigatoriamente num postal dos Açores ou da Madeira.",
     "answers": [
       {
-        "text": "Neve",
+        "text": "Vacas / Pastos verdes",
         "points": 42
       },
       {
-        "text": "Iceberg",
+        "text": "Lagoas / Vulcões",
         "points": 31
       },
       {
-        "text": "Urso Polar",
+        "text": "Hortênsias",
         "points": 14
       },
       {
-        "text": "Montanhas",
+        "text": "Mar / Baleias",
         "points": 9
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
+      },
+      {
+        "text": "",
+        "points": 0
       }
     ],
-    "createdAt": "2026-01-04T17:45:58.203Z"
+    "createdAt": "2026-01-04T17:45:58.203Z",
+    "updatedAt": "2026-01-05T00:09:00.756Z"
   },
   {
     "id": 1767548758238,
@@ -21945,29 +21911,6 @@
       {
         "text": "Correr",
         "points": 3
-      }
-    ],
-    "createdAt": "2026-01-04T17:45:58.203Z"
-  },
-  {
-    "id": 1767548758284,
-    "text": "Que tipo de atleta teria uma vantagem injusta num Roller Derby?",
-    "answers": [
-      {
-        "text": "Patinador",
-        "points": 49
-      },
-      {
-        "text": "Jogador Futebol Americano",
-        "points": 20
-      },
-      {
-        "text": "Jogador de Hóquei",
-        "points": 20
-      },
-      {
-        "text": "Corredor",
-        "points": 8
       }
     ],
     "createdAt": "2026-01-04T17:45:58.203Z"
@@ -56026,37 +55969,6 @@
     "createdAt": "2026-01-04T18:22:42.834Z"
   },
   {
-    "id": 1767550962847,
-    "text": "O que é que é falso no Wrestling (WWE)?",
-    "answers": [
-      {
-        "text": "Sangue",
-        "points": 41
-      },
-      {
-        "text": "A luta",
-        "points": 34
-      },
-      {
-        "text": "Corpos",
-        "points": 10
-      },
-      {
-        "text": "Nomes",
-        "points": 7
-      },
-      {
-        "text": "Lesões",
-        "points": 3
-      },
-      {
-        "text": "Bronzeado",
-        "points": 3
-      }
-    ],
-    "createdAt": "2026-01-04T18:22:42.834Z"
-  },
-  {
     "id": 1767550962848,
     "text": "Diz uma comida que sabe melhor com sal",
     "answers": [
@@ -58506,37 +58418,6 @@
     "createdAt": "2026-01-04T18:22:42.834Z"
   },
   {
-    "id": 1767550962927,
-    "text": "Que assunto sério ficarias surpreendido se a Britney Spears e a Jessica Simpson discutissem?",
-    "answers": [
-      {
-        "text": "Política",
-        "points": 24
-      },
-      {
-        "text": "Guerra",
-        "points": 22
-      },
-      {
-        "text": "Paz Mundial",
-        "points": 21
-      },
-      {
-        "text": "Religião",
-        "points": 11
-      },
-      {
-        "text": "Fome/Pobreza",
-        "points": 10
-      },
-      {
-        "text": "Aquecimento Global",
-        "points": 9
-      }
-    ],
-    "createdAt": "2026-01-04T18:22:42.834Z"
-  },
-  {
     "id": 1767550962928,
     "text": "O que faziam os adolescentes nos anos 50?",
     "answers": [
@@ -59772,37 +59653,6 @@
       {
         "text": "4 de Julho",
         "points": 5
-      }
-    ],
-    "createdAt": "2026-01-04T18:25:32.444Z"
-  },
-  {
-    "id": 1767551132478,
-    "text": "Diz um estado americano que as pessoas visitam no inverno.",
-    "answers": [
-      {
-        "text": "Flórida",
-        "points": 34
-      },
-      {
-        "text": "Califórnia",
-        "points": 18
-      },
-      {
-        "text": "Colorado",
-        "points": 18
-      },
-      {
-        "text": "Havai",
-        "points": 13
-      },
-      {
-        "text": "Nova Iorque",
-        "points": 6
-      },
-      {
-        "text": "Alasca",
-        "points": 4
       }
     ],
     "createdAt": "2026-01-04T18:25:32.444Z"
@@ -91321,41 +91171,6 @@
     "createdAt": "2026-01-04T19:01:03.262Z"
   },
   {
-    "id": 1767553263329,
-    "text": "Diz um sotaque que muitos americanos consideram sexy",
-    "answers": [
-      {
-        "text": "Francês",
-        "points": 34
-      },
-      {
-        "text": "Italiano",
-        "points": 20
-      },
-      {
-        "text": "Espanhol",
-        "points": 17
-      },
-      {
-        "text": "Britânico",
-        "points": 17
-      },
-      {
-        "text": "Sulista (EUA)",
-        "points": 4
-      },
-      {
-        "text": "Australiano",
-        "points": 3
-      },
-      {
-        "text": "Irlandês",
-        "points": 3
-      }
-    ],
-    "createdAt": "2026-01-04T19:01:03.262Z"
-  },
-  {
     "id": 1767553263330,
     "text": "Diz uma queixa que um astronauta possa ter da Estação Espacial",
     "answers": [
@@ -107981,41 +107796,6 @@
     "createdAt": "2026-01-04T19:41:17.598Z"
   },
   {
-    "id": 1767555677602,
-    "text": "Diz algo que as crianças façam na escola para o Dia de Ação de Graças.",
-    "answers": [
-      {
-        "text": "Peru",
-        "points": 78
-      },
-      {
-        "text": "Cornucópia",
-        "points": 6
-      },
-      {
-        "text": "Chapéu de Peregrino",
-        "points": 5
-      },
-      {
-        "text": "Postal",
-        "points": 4
-      },
-      {
-        "text": "Toucado de Índio",
-        "points": 3
-      },
-      {
-        "text": "Abóbora",
-        "points": 2
-      },
-      {
-        "text": "Desenho de Peregrinos",
-        "points": 2
-      }
-    ],
-    "createdAt": "2026-01-04T19:41:17.598Z"
-  },
-  {
     "id": 1767555677603,
     "text": "Diz uma forma de as pessoas se aquecerem quando têm frio.",
     "answers": [
@@ -108185,41 +107965,6 @@
       },
       {
         "text": "Barba/Bigode",
-        "points": 3
-      }
-    ],
-    "createdAt": "2026-01-04T19:41:17.598Z"
-  },
-  {
-    "id": 1767555677608,
-    "text": "Diz uma razão para ansiares por Novembro.",
-    "answers": [
-      {
-        "text": "Ação de Graças",
-        "points": 45
-      },
-      {
-        "text": "Saldos",
-        "points": 15
-      },
-      {
-        "text": "Peru",
-        "points": 14
-      },
-      {
-        "text": "Decorações de Natal",
-        "points": 6
-      },
-      {
-        "text": "Férias",
-        "points": 5
-      },
-      {
-        "text": "Tempo Fresco",
-        "points": 4
-      },
-      {
-        "text": "Reunião de Família",
         "points": 3
       }
     ],
