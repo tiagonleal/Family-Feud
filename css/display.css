@@ -123,6 +123,17 @@ body {
     letter-spacing: 2px;
 }
 
+.team-players {
+    font-size: 0.85rem;
+    color: var(--light-blue);
+    opacity: 0.7;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+}
+
 .team-powerups {
     display: flex;
     gap: 8px;
@@ -458,21 +469,33 @@ body {
 }
 
 /* ============================================
-   ROUND POINTS - Posicionado abaixo do quadro de respostas
+   BOTTOM INFO BAR - Container para pontos e timer
    ============================================ */
 
-.round-points {
+.bottom-info-bar {
     position: fixed;
     bottom: 3%;
     left: 50%;
     transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
     z-index: 40;
+}
+
+/* ============================================
+   ROUND POINTS - Posicionado abaixo do quadro de respostas
+   ============================================ */
+
+.round-points {
     display: none;
     pointer-events: none;
 }
 
 .round-points.visible {
-    display: block;
+    display: flex;
+    align-items: center;
 }
 
 .round-points-value {
@@ -579,15 +602,12 @@ body {
    ============================================ */
 
 .timer-display {
-    position: fixed;
-    bottom: 3%;
-    left: calc(50% + 200px);
     display: none;
-    z-index: 50;
 }
 
 .timer-display.visible {
-    display: block;
+    display: flex;
+    align-items: center;
     animation: fadeIn 0.3s ease;
 }
 
@@ -599,7 +619,7 @@ body {
     background: linear-gradient(180deg, rgba(13,27,76,0.9) 0%, rgba(7,16,48,0.9) 100%);
     border: 5px solid var(--gold);
     border-radius: 15px;
-    padding: 10px 30px;
+    padding: 15px 30px;
     min-width: 120px;
     text-align: center;
 }
@@ -980,5 +1000,341 @@ body {
     to {
         transform: scale(1);
         opacity: 1;
+    }
+}
+
+/* ============================================
+   FACEOFF ACTIVE TEAM HIGHLIGHTING
+   ============================================ */
+
+.team-panel.faceoff-active {
+    animation: faceoffPulse 1s ease-in-out infinite;
+    border-color: #ff9800 !important;
+    box-shadow: 
+        0 0 60px rgba(255, 152, 0, 0.6),
+        0 0 100px rgba(255, 152, 0, 0.3),
+        inset 0 0 30px rgba(255, 152, 0, 0.1) !important;
+}
+
+@keyframes faceoffPulse {
+    0%, 100% {
+        box-shadow: 
+            0 0 60px rgba(255, 152, 0, 0.6),
+            0 0 100px rgba(255, 152, 0, 0.3),
+            inset 0 0 30px rgba(255, 152, 0, 0.1);
+    }
+    50% {
+        box-shadow: 
+            0 0 80px rgba(255, 152, 0, 0.8),
+            0 0 150px rgba(255, 152, 0, 0.5),
+            inset 0 0 50px rgba(255, 152, 0, 0.2);
+    }
+}
+
+/* ============================================
+   FACE-OFF DISPLAY (PUBLIC SCREEN)
+   ============================================ */
+
+.faceoff-display {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.faceoff-display.active {
+    opacity: 1;
+}
+
+.faceoff-display-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.faceoff-display-content {
+    position: relative;
+    text-align: center;
+}
+
+.faceoff-display-header {
+    font-family: var(--font-display);
+    font-size: 10rem;
+    color: var(--gold);
+    text-shadow:
+        0 0 60px rgba(255,215,0,0.6),
+        6px 6px 12px rgba(0,0,0,0.8);
+    margin-bottom: 50px;
+    letter-spacing: 16px;
+}
+
+.faceoff-display-matchup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 60px;
+}
+
+.faceoff-display-player {
+    background: linear-gradient(180deg, rgba(13,27,76,0.95) 0%, rgba(7,16,48,0.95) 100%);
+    border: 8px solid;
+    border-radius: 25px;
+    padding: 50px 80px;
+    min-width: 400px;
+    box-shadow: 0 0 60px rgba(0,0,0,0.5);
+}
+
+.faceoff-display-name {
+    display: block;
+    font-size: 7rem;
+    font-weight: bold;
+    color: var(--white);
+    text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
+}
+
+.faceoff-display-team {
+    display: block;
+    font-size: 3rem;
+    color: var(--gold);
+    opacity: 0.8;
+    margin-top: 15px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.faceoff-vs {
+    font-family: var(--font-display);
+    font-size: 8rem;
+    color: var(--gold);
+    text-shadow:
+        0 0 40px rgba(255,215,0,0.5),
+        4px 4px 8px rgba(0,0,0,0.8);
+}
+
+/* ============================================
+   DOUBLE POINTS TRANSITION ANIMATION
+   ============================================ */
+
+.double-points-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.98) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    overflow: hidden;
+}
+
+.double-points-overlay.active {
+    opacity: 1;
+}
+
+.double-points-content {
+    text-align: center;
+    position: relative;
+    transform: scale(0.3);
+    opacity: 0;
+    transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.double-points-overlay.active .double-points-content {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.double-points-overlay.explode .double-points-content {
+    animation: doublePulse 0.5s ease-in-out;
+}
+
+.double-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, rgba(255,152,0,0.2) 40%, transparent 70%);
+    border-radius: 50%;
+    animation: glowPulse 2s ease-in-out infinite;
+    z-index: -1;
+}
+
+.double-rays {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: 
+        repeating-conic-gradient(
+            from 0deg,
+            transparent 0deg 8deg,
+            rgba(255, 215, 0, 0.1) 8deg 10deg
+        );
+    animation: raysRotate 20s linear infinite;
+    z-index: -2;
+}
+
+.double-icon-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.double-icon {
+    font-size: 12rem;
+    color: #ffd700;
+    text-shadow: 
+        0 0 60px rgba(255, 215, 0, 1),
+        0 0 120px rgba(255, 215, 0, 0.8),
+        0 0 180px rgba(255, 152, 0, 0.6),
+        5px 5px 10px rgba(0,0,0,0.8);
+    animation: iconFloat 2s ease-in-out infinite;
+}
+
+.double-icon:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.double-icon:nth-child(2) {
+    font-size: 15rem;
+    color: #fff;
+    text-shadow: 
+        0 0 60px rgba(255, 255, 255, 1),
+        0 0 120px rgba(255, 215, 0, 0.8),
+        5px 5px 10px rgba(0,0,0,0.8);
+    animation-delay: 0.2s;
+}
+
+.double-icon:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.double-text-main {
+    font-family: var(--font-display);
+    font-size: 6rem;
+    color: #ffd700;
+    text-transform: uppercase;
+    letter-spacing: 20px;
+    text-shadow: 
+        0 0 40px rgba(255, 215, 0, 0.8),
+        0 0 80px rgba(255, 152, 0, 0.5),
+        4px 4px 8px rgba(0,0,0,0.8);
+    animation: textGlow 1.5s ease-in-out infinite alternate;
+    margin-bottom: 20px;
+}
+
+.double-text-sub {
+    font-size: 2.5rem;
+    color: #fff;
+    letter-spacing: 5px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    opacity: 0.9;
+}
+
+.double-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.double-particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: particleFloat 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+    }
+}
+
+@keyframes raysRotate {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes iconFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+@keyframes textGlow {
+    0% {
+        text-shadow: 
+            0 0 40px rgba(255, 215, 0, 0.8),
+            0 0 80px rgba(255, 152, 0, 0.5),
+            4px 4px 8px rgba(0,0,0,0.8);
+    }
+    100% {
+        text-shadow: 
+            0 0 60px rgba(255, 215, 0, 1),
+            0 0 120px rgba(255, 152, 0, 0.8),
+            0 0 180px rgba(255, 152, 0, 0.4),
+            4px 4px 8px rgba(0,0,0,0.8);
+    }
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-200px) scale(1.5);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translateY(-400px) scale(0);
+        opacity: 0;
+    }
+}
+
+@keyframes doublePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
     }
 }

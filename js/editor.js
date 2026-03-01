@@ -8,14 +8,6 @@ let currentQuestionId = null;
 let saveTimeout = null;
 let searchQuery = '';
 
-// Escape HTML para prevenir XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // ============================================
 // INITIALIZATION
 // ============================================
@@ -139,8 +131,13 @@ function filterQuestions() {
         filteredQuestions = questions;
     } else {
         filteredQuestions = questions.filter(q => {
-            // Pesquisar apenas no texto da pergunta
-            return q.text && q.text.toLowerCase().includes(searchQuery);
+            // Pesquisar no texto da pergunta
+            if (q.text && q.text.toLowerCase().includes(searchQuery)) return true;
+            // Pesquisar também nas respostas
+            if (q.answers) {
+                return q.answers.some(a => a && a.text && a.text.toLowerCase().includes(searchQuery));
+            }
+            return false;
         });
     }
     
@@ -377,27 +374,66 @@ function exportQuestions() {
 async function importQuestions(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
+
     try {
-        const imported = await Storage.importQuestionsFromFile(file);
-        questions = imported;
+        // Ler o ficheiro manualmente para decidir substituir ou adicionar
+        const fileContent = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data)) resolve(data);
+                    else reject(new Error('Formato inválido'));
+                } catch (err) { reject(err); }
+            };
+            reader.onerror = () => reject(reader.error);
+            reader.readAsText(file);
+        });
+
+        let mode = 'replace';
+        if (questions.length > 0) {
+            const choice = confirm(
+                `Tens ${questions.length} perguntas existentes.\n\n` +
+                `OK = ADICIONAR as ${fileContent.length} novas perguntas às existentes\n` +
+                `Cancelar = SUBSTITUIR tudo pelas ${fileContent.length} importadas`
+            );
+            mode = choice ? 'merge' : 'replace';
+        }
+
+        if (mode === 'merge') {
+            // Adicionar com novos IDs para evitar conflitos
+            const newQuestions = fileContent.map(q => ({
+                ...q,
+                id: Date.now() + Math.floor(Math.random() * 100000),
+                importedAt: new Date().toISOString()
+            }));
+            questions = questions.concat(newQuestions);
+        } else {
+            questions = fileContent;
+        }
+
+        Storage.saveQuestions(questions);
         filteredQuestions = questions;
         renderQuestionsGrid();
         updateQuestionCount();
-        
+
         // Reset selection e voltar ao grid
         currentQuestionId = null;
         const gridView = document.getElementById('questionsGridView');
         const editorPanel = document.getElementById('questionEditorPanel');
         if (gridView) gridView.style.display = 'flex';
         if (editorPanel) editorPanel.style.display = 'none';
-        
-        alert(`${imported.length} perguntas importadas com sucesso!`);
+
+        if (mode === 'merge') {
+            alert(`${fileContent.length} perguntas adicionadas! Total: ${questions.length}`);
+        } else {
+            alert(`${questions.length} perguntas importadas com sucesso!`);
+        }
     } catch (e) {
         console.error('Import error:', e);
         alert('Erro ao importar ficheiro. Verifica se o formato está correto.');
     }
-    
+
     // Reset file input
     event.target.value = '';
 }

@@ -60,6 +60,9 @@ const Sounds = {
             case 'points':
                 this.playPoints();
                 break;
+            case 'timeup':
+                this.playTimeUp();
+                break;
             default:
                 console.log('Unknown sound:', soundType);
         }
@@ -265,6 +268,41 @@ const Sounds = {
             osc.start(startTime);
             osc.stop(startTime + 0.15);
         }
+    },
+
+    // Som de tempo esgotado - Horn/sirene descendente (diferente do buzzer)
+    playTimeUp() {
+        const ctx = this.audioContext;
+        const now = ctx.currentTime;
+
+        // Tom descendente tipo sirene
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        osc1.type = 'triangle';
+        osc2.type = 'sine';
+
+        // Frequência desce de agudo para grave
+        osc1.frequency.setValueAtTime(800, now);
+        osc1.frequency.exponentialRampToValueAtTime(300, now + 1.0);
+        osc2.frequency.setValueAtTime(803, now); // Ligeiro detuning para efeito
+        osc2.frequency.exponentialRampToValueAtTime(301, now + 1.0);
+
+        // Envelope
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(this.volume * 0.45, now + 0.05);
+        gainNode.gain.setValueAtTime(this.volume * 0.45, now + 0.7);
+        gainNode.gain.linearRampToValueAtTime(0, now + 1.0);
+
+        osc1.connect(gainNode);
+        osc2.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 1.0);
+        osc2.stop(now + 1.0);
     },
 
     // Função auxiliar para criar curva de distorção

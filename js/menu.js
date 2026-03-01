@@ -4,13 +4,15 @@
 
 let selectedTeams = 2;
 let teamsData = [];
+let selectedAnswerCounts = new Set();
 
-// Escape HTML para prevenir XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+// Fisher-Yates shuffle (uniforme)
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
 }
 
 // ============================================
@@ -49,6 +51,79 @@ function initMenu() {
 function openNewGame() {
     const modal = document.getElementById('newGameModal');
     if (modal) modal.classList.add('active');
+    initAnswerCountFilter();
+}
+
+// ============================================
+// ANSWER COUNT FILTER
+// ============================================
+
+function getValidAnswerCount(q) {
+    if (!q.answers) return 0;
+    return q.answers.filter(a => a && a.text && a.text.trim() !== '').length;
+}
+
+function initAnswerCountFilter() {
+    const questions = Storage.getQuestions();
+
+    // Contar perguntas válidas por nº de respostas
+    const countsByAnswers = {};
+    questions.forEach(q => {
+        if (!q.text || q.text.trim() === '') return;
+        const count = getValidAnswerCount(q);
+        if (count < 2) return; // Ignorar perguntas com menos de 2 respostas
+        if (!countsByAnswers[count]) countsByAnswers[count] = 0;
+        countsByAnswers[count]++;
+    });
+
+    const container = document.getElementById('answerCountFilter');
+    if (!container) return;
+
+    const availableCounts = Object.keys(countsByAnswers).map(Number).sort((a, b) => a - b);
+
+    // Por defeito, todos selecionados
+    selectedAnswerCounts = new Set(availableCounts);
+
+    // Gerar botões
+    container.innerHTML = availableCounts.map(count =>
+        `<button class="answer-count-btn active" data-count="${count}" onclick="toggleAnswerCount(${count})">
+            <span class="answer-count-num">${count}</span>
+            <span class="answer-count-total">${countsByAnswers[count]}</span>
+        </button>`
+    ).join('');
+
+    updateFilterInfo();
+}
+
+function toggleAnswerCount(count) {
+    // Impedir desselecionar todos
+    if (selectedAnswerCounts.has(count) && selectedAnswerCounts.size <= 1) return;
+
+    if (selectedAnswerCounts.has(count)) {
+        selectedAnswerCounts.delete(count);
+    } else {
+        selectedAnswerCounts.add(count);
+    }
+
+    // Atualizar estado visual do botão
+    const btn = document.querySelector(`.answer-count-btn[data-count="${count}"]`);
+    if (btn) btn.classList.toggle('active', selectedAnswerCounts.has(count));
+
+    updateFilterInfo();
+}
+
+function updateFilterInfo() {
+    const infoEl = document.getElementById('filterInfo');
+    if (!infoEl) return;
+
+    const questions = Storage.getQuestions();
+    const filtered = questions.filter(q => {
+        if (!q.text || q.text.trim() === '') return false;
+        const count = getValidAnswerCount(q);
+        return selectedAnswerCounts.has(count);
+    });
+
+    infoEl.textContent = `${filtered.length} perguntas disponíveis`;
 }
 
 function closeModal() {
@@ -215,14 +290,16 @@ function startGame() {
         }
     }
     
-    // Verificar perguntas com respostas válidas
-    const validQuestions = questions.filter(q => 
-        q.text && q.text.trim() !== '' && 
-        q.answers && q.answers.some(a => a && a.text && a.text.trim() !== '')
-    );
-    
+    // Verificar perguntas com respostas válidas e filtro de nº de respostas
+    const validQuestions = questions.filter(q => {
+        if (!q.text || q.text.trim() === '') return false;
+        if (!q.answers || !q.answers.some(a => a && a.text && a.text.trim() !== '')) return false;
+        const answerCount = getValidAnswerCount(q);
+        return selectedAnswerCounts.has(answerCount);
+    });
+
     if (validQuestions.length < totalRounds) {
-        alert(`Precisas de pelo menos ${totalRounds} perguntas válidas!\nTens apenas ${validQuestions.length} perguntas com texto e respostas.\n\nVai ao Editor de Perguntas para adicionar mais.`);
+        alert(`Precisas de pelo menos ${totalRounds} perguntas válidas com o filtro selecionado!\nTens apenas ${validQuestions.length} perguntas disponíveis.\n\nAjusta o filtro de respostas ou vai ao Editor de Perguntas para adicionar mais.`);
         return;
     }
 
@@ -244,11 +321,13 @@ function createInitialGameState(normalRounds, doubleRounds) {
     const questionStats = Storage.getQuestionStats();
     const totalRounds = normalRounds + doubleRounds;
     
-    // Filtrar apenas perguntas válidas (com pelo menos 1 resposta)
-    const validQuestions = questions.filter(q => 
-        q.text && q.text.trim() !== '' && 
-        q.answers && q.answers.some(a => a && a.text && a.text.trim() !== '')
-    );
+    // Filtrar perguntas válidas com filtro de nº de respostas
+    const validQuestions = questions.filter(q => {
+        if (!q.text || q.text.trim() === '') return false;
+        if (!q.answers || !q.answers.some(a => a && a.text && a.text.trim() !== '')) return false;
+        const answerCount = getValidAnswerCount(q);
+        return selectedAnswerCounts.has(answerCount);
+    });
     
     // Ordenar por número de vezes usadas (menos usadas primeiro) e depois randomizar dentro do mesmo grupo
     const sortedByUsage = [...validQuestions].map(q => ({
@@ -267,7 +346,7 @@ function createInitialGameState(normalRounds, doubleRounds) {
     const usageCounts = Object.keys(grouped).map(Number).sort((a, b) => a - b);
     let prioritizedQuestions = [];
     usageCounts.forEach(count => {
-        const shuffledGroup = grouped[count].sort(() => Math.random() - 0.5);
+        const shuffledGroup = shuffleArray([...grouped[count]]);
         prioritizedQuestions = prioritizedQuestions.concat(shuffledGroup);
     });
     
@@ -340,7 +419,8 @@ function createInitialGameState(normalRounds, doubleRounds) {
         timerRunning: false,
         paused: false,
         finished: false,
-        phase: 'faceoff'        // faceoff, playing, steal
+        phase: 'faceoff',       // faceoff, playing, steal
+        faceoffPlayerIndices: Array(selectedTeams).fill(0)  // Rotação de jogadores no face-off
     };
 }
 

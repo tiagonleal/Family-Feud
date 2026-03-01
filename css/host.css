@@ -156,6 +156,38 @@
     margin-top: 3px;
 }
 
+.host-team-score-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-score-adjust {
+    width: 30px;
+    height: 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    font-family: var(--font-main);
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+}
+
+.btn-score-adjust:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: scale(1.1);
+}
+
 .host-team-score {
     font-size: 2.5rem;
     font-family: var(--font-display);
@@ -1009,6 +1041,109 @@
     color: var(--gold);
 }
 
+/* Host Face-off Buzzer Overlay (fullscreen) */
+.faceoff-buzzer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.faceoff-buzzer-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.faceoff-buzzer-content {
+    position: relative;
+    text-align: center;
+    padding: 40px;
+}
+
+.faceoff-buzzer-header {
+    font-family: var(--font-display, 'Arial Black', sans-serif);
+    font-size: 4rem;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(255,215,0,0.5);
+    margin-bottom: 20px;
+    letter-spacing: 8px;
+}
+
+.faceoff-buzzer-matchup {
+    font-size: 1.8rem;
+    color: var(--white);
+    margin-bottom: 15px;
+}
+
+.faceoff-buzzer-matchup strong {
+    color: var(--gold);
+}
+
+.faceoff-buzzer-question {
+    font-size: 1.4rem;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 30px;
+}
+
+.faceoff-buzzer-buttons {
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+}
+
+.btn-faceoff-buzzer {
+    padding: 35px 55px;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 220px;
+    color: var(--white);
+    font-family: var(--font-main);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.btn-faceoff-buzzer:hover {
+    transform: scale(1.08);
+    border-color: var(--gold);
+    box-shadow: 0 0 40px rgba(255,215,0,0.4);
+}
+
+.faceoff-buzzer-player {
+    display: block;
+    font-size: 2.2rem;
+    font-weight: bold;
+}
+
+.faceoff-buzzer-team {
+    display: block;
+    font-size: 1rem;
+    opacity: 0.8;
+    margin-top: 5px;
+}
+
+/* Small panel styles (after buzzer is chosen) */
+.faceoff-player-name {
+    display: block;
+    font-size: 1.2rem;
+}
+
+.faceoff-team-label {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
 .faceoff-panel-buttons {
     display: flex;
     flex-direction: column;
@@ -1059,5 +1194,63 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+}
+
+/* ============================================
+   DOUBLE POINTS POPUP (HOST)
+   ============================================ */
+
+.double-points-popup-host {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+}
+
+.double-points-popup-host.active {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+.double-popup-content {
+    background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%);
+    border: 4px solid #ffd700;
+    border-radius: 20px;
+    padding: 30px 50px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.3);
+}
+
+.double-popup-icon {
+    font-size: 4rem;
+    margin-bottom: 10px;
+    animation: popupBounce 0.5s ease-in-out;
+}
+
+.double-popup-text {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+}
+
+.double-popup-subtext {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@keyframes popupBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
 }
 

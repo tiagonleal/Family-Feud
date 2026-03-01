@@ -251,11 +251,22 @@ const Sync = {
         STEAL_SUCCESS: 'steal_success',
         STEAL_FAIL: 'steal_fail',
         WRONG_GUESS: 'wrong_guess',
-        AWARD_POINTS: 'award_points'
+        AWARD_POINTS: 'award_points',
+        DOUBLE_POINTS_TRANSITION: 'double_points_transition',
+        FACEOFF_UPDATE: 'faceoff_update'
     }
 };
+
+// Escape HTML para prevenir XSS (função partilhada por todos os módulos)
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 // Exporta para uso global
 window.Storage = Storage;
 window.Sync = Sync;
 window.GameChannel = GameChannel;
+window.escapeHtml = escapeHtml;

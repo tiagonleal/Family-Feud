@@ -5,14 +5,6 @@
 let gameState = null;
 let hasRequestedFullscreen = false;
 
-// Escape HTML para prevenir XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // ============================================
 // INITIALIZATION
 // ============================================
@@ -44,6 +36,11 @@ function initDisplay() {
     // Initial render
     renderScoreboard();
     renderCurrentRound();
+
+    // Se está em face-off, mostrar matchup a partir do gameState
+    if (gameState.phase === 'faceoff') {
+        showFaceoffFromState();
+    }
     
     // Inicializa sons
     Sounds.init();
@@ -135,7 +132,7 @@ function handleSyncMessage(message) {
             break;
             
         case Sync.EVENTS.CHANGE_TEAM:
-            setActiveTeam(data.teamIndex);
+            setActiveTeam(data.teamIndex, data.isFaceoff);
             break;
             
         case Sync.EVENTS.NEW_ROUND:
@@ -143,6 +140,10 @@ function handleSyncMessage(message) {
             renderScoreboard();
             renderCurrentRound();
             clearWrongGuesses(); // Limpar wrong guesses da ronda anterior
+            break;
+            
+        case Sync.EVENTS.DOUBLE_POINTS_TRANSITION:
+            showDoublePointsAnimation();
             break;
             
         case Sync.EVENTS.TIMER_START:
@@ -192,6 +193,10 @@ function handleSyncMessage(message) {
         case Sync.EVENTS.AWARD_POINTS:
             animatePointsToTeam(data.teamIndex, data.points, data.newScore);
             break;
+
+        case Sync.EVENTS.FACEOFF_UPDATE:
+            handleFaceoffUpdate(data);
+            break;
     }
 }
 
@@ -207,10 +212,12 @@ function renderScoreboard() {
     
     container.innerHTML = gameState.teams.map((team, i) => {
         const powerups = team.powerups || { pass: true, extra: true };
+        const playersText = team.players && team.players.length > 0 ? team.players.map(p => escapeHtml(p)).join(', ') : '';
         return `
             <div class="team-panel ${gameState.controllingTeam === i ? 'active' : ''}" id="team${i}">
                 <div class="team-info">
                     <div class="team-name">${escapeHtml(team.name) || 'Equipa'}</div>
+                    ${playersText ? `<div class="team-players">${playersText}</div>` : ''}
                     <div class="team-powerups">
                         <span class="powerup-icon ${!powerups.pass ? 'used' : ''}" title="Passar Vez">🔄</span>
                         <span class="powerup-icon ${!powerups.extra ? 'used' : ''}" title="Resposta Extra">➕</span>
@@ -477,13 +484,14 @@ function showStrikes(count) {
     const overlay = document.getElementById('strikesOverlay');
     if (!overlay) return;
     
-    // Se count é 0, apenas limpa os strikes sem mostrar overlay
+    // Se count é 0, limpa os strikes e as respostas erradas
     if (count === 0) {
         overlay.classList.remove('active');
         for (let i = 1; i <= 3; i++) {
             const strike = document.getElementById(`strike${i}`);
             if (strike) strike.classList.remove('visible');
         }
+        clearWrongGuesses();
         return;
     }
     
@@ -579,16 +587,25 @@ function animatePointsToTeam(teamIndex, points, newScore) {
     }, 800);
 }
 
-function setActiveTeam(teamIndex) {
+function setActiveTeam(teamIndex, isFaceoff = false) {
     // Remove active from all
     document.querySelectorAll('.team-panel').forEach(panel => {
         panel.classList.remove('active');
+        panel.classList.remove('faceoff-active');
     });
+    
+    // Se teamIndex é -1 ou undefined, apenas limpar (nenhuma equipa ativa)
+    if (teamIndex === undefined || teamIndex === null || teamIndex < 0) {
+        return;
+    }
     
     // Add active to selected
     const panel = document.getElementById(`team${teamIndex}`);
     if (panel) {
         panel.classList.add('active');
+        if (isFaceoff) {
+            panel.classList.add('faceoff-active');
+        }
     }
 }
 
@@ -642,9 +659,12 @@ function updateTimer(seconds) {
 
 function hideTimer() {
     const display = document.getElementById('timerDisplay');
-    if (display) {
-        display.classList.remove('visible');
-    }
+    if (!display) return;
+
+    // Se está pausado, manter visível (congelado)
+    if (display.classList.contains('paused')) return;
+
+    display.classList.remove('visible');
 }
 
 // ============================================
@@ -654,9 +674,16 @@ function hideTimer() {
 function showPause() {
     const pauseOverlay = document.getElementById('pauseOverlay');
     if (pauseOverlay) pauseOverlay.classList.add('active');
+
+    // Manter timer visível durante a pausa (congelado)
+    const timerEl = document.getElementById('timerDisplay');
+    if (timerEl) timerEl.classList.add('paused');
 }
 
 function hidePause() {
+    // Remover estado pausado do timer
+    const timerEl = document.getElementById('timerDisplay');
+    if (timerEl) timerEl.classList.remove('paused');
     const pauseOverlay = document.getElementById('pauseOverlay');
     if (pauseOverlay) pauseOverlay.classList.remove('active');
 }
@@ -696,6 +723,68 @@ function createConfetti() {
         
         // Remove after animation
         setTimeout(() => confetti.remove(), 7000);
+    }
+}
+
+// ============================================
+// DOUBLE POINTS TRANSITION ANIMATION
+// ============================================
+
+function showDoublePointsAnimation() {
+    // Criar overlay espetacular para a transição para pontos duplos
+    const overlay = document.createElement('div');
+    overlay.className = 'double-points-overlay';
+    overlay.innerHTML = `
+        <div class="double-points-content">
+            <div class="double-particles"></div>
+            <div class="double-glow"></div>
+            <div class="double-icon-container">
+                <span class="double-icon">⚡</span>
+                <span class="double-icon">2</span>
+                <span class="double-icon">×</span>
+            </div>
+            <div class="double-text-main">PONTOS DUPLOS</div>
+            <div class="double-text-sub">As próximas rondas valem o dobro!</div>
+            <div class="double-rays"></div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Criar partículas douradas
+    createDoublePointsParticles(overlay);
+    
+    // Play sound
+    Sounds.play('victory');
+    
+    // Animar entrada
+    setTimeout(() => overlay.classList.add('active'), 50);
+    
+    // Fase 2 - explosão
+    setTimeout(() => overlay.classList.add('explode'), 1500);
+    
+    // Remover após 4 segundos
+    setTimeout(() => {
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 800);
+    }, 4000);
+}
+
+function createDoublePointsParticles(container) {
+    const particlesContainer = container.querySelector('.double-particles');
+    if (!particlesContainer) return;
+    
+    const colors = ['#ffd700', '#ffeb3b', '#ff9800', '#fff176', '#ffe082'];
+    
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'double-particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.animationDelay = Math.random() * 2 + 's';
+        particle.style.animationDuration = (Math.random() * 2 + 1) + 's';
+        particlesContainer.appendChild(particle);
     }
 }
 
@@ -870,8 +959,75 @@ function addWrongGuessToTeam(guess, teamIndex) {
 function clearWrongGuesses() {
     // Limpar todas as listas de wrong guesses (chamado quando muda de ronda)
     if (!gameState || !gameState.teams) return;
-    
+
     gameState.teams.forEach((team, i) => {
         const container = document.getElementById(`wrongGuesses${i}`);
         if (container) container.innerHTML = '';
-    });}
+    });
+}
+
+// ============================================
+// FACE-OFF DISPLAY
+// ============================================
+
+function handleFaceoffUpdate(data) {
+    if (data.phase === 'matchup' && data.players) {
+        showFaceoffMatchup(data.players);
+    } else if (data.phase === 'end') {
+        hideFaceoffMatchup();
+    }
+}
+
+function showFaceoffFromState() {
+    if (!gameState || !gameState.teams || gameState.teams.length < 2) return;
+    if (!gameState.faceoffPlayerIndices) return;
+
+    const players = gameState.teams.map((team, i) => {
+        const playerIndex = gameState.faceoffPlayerIndices[i] % team.players.length;
+        return {
+            playerName: team.players[playerIndex] || team.name,
+            teamName: team.name,
+            teamColor: team.color || '#4a90d9'
+        };
+    });
+
+    showFaceoffMatchup(players);
+}
+
+function showFaceoffMatchup(players) {
+    // Remove anterior imediatamente se existir
+    const existing = document.getElementById('faceoffDisplay');
+    if (existing) existing.remove();
+
+    const matchupHtml = players.map((p, i) => {
+        const separator = i < players.length - 1 ? '<span class="faceoff-vs">VS</span>' : '';
+        return `<div class="faceoff-display-player" style="border-color: ${p.teamColor}">
+            <span class="faceoff-display-name">${escapeHtml(p.playerName)}</span>
+            <span class="faceoff-display-team">${escapeHtml(p.teamName)}</span>
+        </div>${separator}`;
+    }).join('');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'faceoffDisplay';
+    overlay.className = 'faceoff-display';
+    overlay.innerHTML = `
+        <div class="faceoff-display-backdrop"></div>
+        <div class="faceoff-display-content">
+            <div class="faceoff-display-header">FACE-OFF</div>
+            <div class="faceoff-display-matchup">${matchupHtml}</div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Animar entrada
+    setTimeout(() => overlay.classList.add('active'), 50);
+}
+
+function hideFaceoffMatchup() {
+    const overlay = document.getElementById('faceoffDisplay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 400);
+    }
+}

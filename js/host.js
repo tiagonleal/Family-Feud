@@ -10,14 +10,6 @@ let isStealMode = false;
 let extraAnswerActive = false;
 let hasRequestedFullscreen = false;
 
-// Escape HTML para prevenir XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // ============================================
 // INITIALIZATION
 // ============================================
@@ -66,11 +58,11 @@ function initHost() {
     // Add log entry
     addLog('Jogo iniciado');
     
-    // Se está em face-off, iniciar automaticamente
+    // Se está em face-off, iniciar automaticamente (delay para dar tempo ao display abrir)
     if (gameState.phase === 'faceoff' && gameState.controllingTeam === null) {
         setTimeout(() => {
             startFaceoff();
-        }, 500);
+        }, 2000);
     }
     
     // Tentar fullscreen automático - precisa de interação do utilizador
@@ -134,7 +126,11 @@ function renderScoreboard() {
                 <div class="host-team-name">${escapeHtml(team.name)}</div>
                 <div class="host-team-players">${team.players && team.players.length > 0 ? team.players.map(p => escapeHtml(p)).join(', ') : 'Sem jogadores'}</div>
             </div>
-            <div class="host-team-score" id="hostScore${i}">${team.score || 0}</div>
+            <div class="host-team-score-area">
+                <button class="btn-score-adjust" onclick="adjustScore(${i}, -10)" title="-10 pontos">-</button>
+                <div class="host-team-score" id="hostScore${i}">${team.score || 0}</div>
+                <button class="btn-score-adjust" onclick="adjustScore(${i}, 10)" title="+10 pontos">+</button>
+            </div>
         </div>
     `).join('');
 }
@@ -483,6 +479,38 @@ function revealAnswer(index) {
 // FACE-OFF SYSTEM (Regras originais do programa)
 // ============================================
 
+// Helper: obter o nome do jogador atual do face-off para uma equipa
+function getCurrentFaceoffPlayer(teamIndex) {
+    const team = gameState.teams[teamIndex];
+    if (!team || !team.players || team.players.length === 0) return team ? team.name : 'Equipa';
+
+    // Garantir que faceoffPlayerIndices existe
+    if (!gameState.faceoffPlayerIndices) {
+        gameState.faceoffPlayerIndices = Array(gameState.teams.length).fill(0);
+    }
+
+    const playerIndex = gameState.faceoffPlayerIndices[teamIndex] % team.players.length;
+    return team.players[playerIndex];
+}
+
+// Helper: avançar todos os jogadores do face-off (+1 com wrap)
+// Cada equipa avança sequencialmente pelo seu próprio tamanho.
+function advanceFaceoffPlayers() {
+    if (!gameState.faceoffPlayerIndices) {
+        gameState.faceoffPlayerIndices = Array(gameState.teams.length).fill(0);
+    }
+
+    gameState.teams.forEach((team, i) => {
+        if (!team.players || team.players.length <= 1) {
+            gameState.faceoffPlayerIndices[i] = 0;
+            return;
+        }
+        gameState.faceoffPlayerIndices[i] = (gameState.faceoffPlayerIndices[i] + 1) % team.players.length;
+    });
+
+    Storage.saveGameState(gameState);
+}
+
 function startFaceoff() {
     faceoffState = {
         phase: 'buzzer',           // buzzer, answering, checking-better
@@ -494,6 +522,10 @@ function startFaceoff() {
         bestAnswer: null,          // Melhor resposta encontrada até agora
         bestTeam: null             // Equipa com melhor resposta
     };
+
+    // Limpar equipa ativa no display durante face-off (nenhuma está selecionada ainda)
+    Sync.broadcast(Sync.EVENTS.CHANGE_TEAM, { teamIndex: -1, isFaceoff: false });
+
     // Mostrar painel de face-off em vez de popup bloqueante
     showFaceoffPanel();
 }
@@ -502,69 +534,132 @@ function showFaceoffPanel() {
     // Remove painel anterior se existir
     const existing = document.getElementById('faceoffPanel');
     if (existing) existing.remove();
-    
+    const existingOverlay = document.getElementById('faceoffBuzzerOverlay');
+    if (existingOverlay) existingOverlay.remove();
+
     if (!gameState.teams || gameState.teams.length < 2) return;
-    
+
+    // Mostrar jogadores atuais do face-off
+    let playersLine = gameState.teams.map((team, i) => {
+        const player = getCurrentFaceoffPlayer(i);
+        return `<strong>${escapeHtml(player)}</strong> <small>(${escapeHtml(team.name)})</small>`;
+    }).join(' vs ');
+
     let teamButtons = '';
     gameState.teams.forEach((team, i) => {
-        teamButtons += `<button onclick="faceoffBuzzer(${i})" class="btn-faceoff-team" style="background: ${team.color || '#4a90d9'}">${escapeHtml(team.name)}</button>`;
+        const player = getCurrentFaceoffPlayer(i);
+        teamButtons += `<button onclick="faceoffBuzzer(${i})" class="btn-faceoff-buzzer" style="background: ${team.color || '#4a90d9'}">
+            <span class="faceoff-buzzer-player">${escapeHtml(player)}</span>
+            <span class="faceoff-buzzer-team">${escapeHtml(team.name)}</span>
+        </button>`;
     });
-    
-    const panelHtml = `
-        <div class="faceoff-panel" id="faceoffPanel">
-            <div class="faceoff-panel-header">🔔 FACE-OFF</div>
-            <div class="faceoff-panel-content">
-                <p>Quem carregou primeiro?</p>
-                <div class="faceoff-panel-buttons">
+
+    // Overlay fullscreen com backdrop para o buzzer
+    const overlayHtml = `
+        <div class="faceoff-buzzer-overlay" id="faceoffBuzzerOverlay">
+            <div class="faceoff-buzzer-backdrop"></div>
+            <div class="faceoff-buzzer-content">
+                <div class="faceoff-buzzer-header">FACE-OFF</div>
+                <div class="faceoff-buzzer-matchup">${playersLine}</div>
+                <div class="faceoff-buzzer-question">Quem carregou primeiro?</div>
+                <div class="faceoff-buzzer-buttons">
                     ${teamButtons}
                 </div>
             </div>
         </div>
     `;
-    
-    document.body.insertAdjacentHTML('beforeend', panelHtml);
+
+    document.body.insertAdjacentHTML('beforeend', overlayHtml);
+
+    // Broadcast matchup para o display público
+    const faceoffPlayers = gameState.teams.map((team, i) => ({
+        playerName: getCurrentFaceoffPlayer(i),
+        teamName: team.name,
+        teamColor: team.color || '#4a90d9'
+    }));
+    Sync.broadcast(Sync.EVENTS.FACEOFF_UPDATE, { phase: 'matchup', players: faceoffPlayers });
+}
+
+function hideBuzzerOverlay() {
+    const overlay = document.getElementById('faceoffBuzzerOverlay');
+    if (overlay) overlay.remove();
 }
 
 function updateFaceoffPanel(message, buttons) {
-    const panel = document.getElementById('faceoffPanel');
-    if (!panel) return;
-    
-    const content = panel.querySelector('.faceoff-panel-content');
-    if (content) {
-        content.innerHTML = `<p>${message}</p><div class="faceoff-panel-buttons">${buttons}</div>`;
+    // Remover overlay do buzzer se existir
+    hideBuzzerOverlay();
+
+    // Criar/atualizar painel pequeno lateral
+    let panel = document.getElementById('faceoffPanel');
+    if (!panel) {
+        const panelHtml = `
+            <div class="faceoff-panel" id="faceoffPanel">
+                <div class="faceoff-panel-header">🔔 FACE-OFF</div>
+                <div class="faceoff-panel-content">
+                    <p>${message}</p>
+                    <div class="faceoff-panel-buttons">${buttons}</div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', panelHtml);
+    } else {
+        const content = panel.querySelector('.faceoff-panel-content');
+        if (content) {
+            content.innerHTML = `<p>${message}</p><div class="faceoff-panel-buttons">${buttons}</div>`;
+        }
     }
 }
 
 function hideFaceoffPanel() {
     const panel = document.getElementById('faceoffPanel');
     if (panel) panel.remove();
+    hideBuzzerOverlay();
 }
 
 function faceoffBuzzer(teamIndex) {
     const team = gameState.teams[teamIndex];
     if (!team) return;
-    
+
+    const player = getCurrentFaceoffPlayer(teamIndex);
+
     // Guardar equipa do buzzer
     faceoffState.buzzerTeam = teamIndex;
     faceoffState.buzzerAnswer = null;
     faceoffState.bestAnswer = null;
     faceoffState.bestTeam = null;
-    
+
     // Criar ordem das outras equipas (para quando falham)
     faceoffState.teamsOrder = [];
     for (let i = 1; i < gameState.teams.length; i++) {
         faceoffState.teamsOrder.push((teamIndex + i) % gameState.teams.length);
     }
     faceoffState.currentTeamIndex = 0;
-    
+
     faceoffState.phase = 'answering';
     faceoffState.waitingForAnswer = true;
-    
-    addLog(`🔔 ${team.name} carregou primeiro!`);
-    
+
+    addLog(`🔔 ${player} (${team.name}) carregou primeiro!`);
+
+    // Esconder overlay do face-off no display público
+    Sync.broadcast(Sync.EVENTS.FACEOFF_UPDATE, { phase: 'end' });
+
+    // Revelar a pergunta no display automaticamente
+    const round = gameState.rounds[gameState.currentRound];
+    if (round && round.question && !round.questionRevealed) {
+        round.questionRevealed = true;
+        Storage.saveGameState(gameState);
+        Sync.broadcast(Sync.EVENTS.REVEAL_QUESTION, {
+            questionText: round.question.text
+        });
+        renderAll();
+    }
+
+    // Notificar display sobre qual equipa está ativa no face-off
+    Sync.broadcast(Sync.EVENTS.CHANGE_TEAM, { teamIndex: teamIndex, isFaceoff: true });
+
     // Mostrar painel - espera resposta
     updateFaceoffPanel(
-        `<strong>${escapeHtml(team.name)}</strong> responde!<br><small>Clica na resposta no quadro ou:</small>`,
+        `<strong>${escapeHtml(player)}</strong> <small>(${escapeHtml(team.name)})</small> responde!<br><small>Clica na resposta no quadro ou:</small>`,
         `<button onclick="faceoffMiss(event)" class="btn-faceoff-wrong">✕ ERROU</button>`
     );
 }
@@ -582,18 +677,19 @@ function handleFaceoffAnswer(index, answer) {
         faceoffState.buzzerAnswer = index;
         faceoffState.bestAnswer = index;
         faceoffState.bestTeam = faceoffState.buzzerTeam;
-        
+
         const team = gameState.teams[faceoffState.buzzerTeam];
-        addLog(`✓ ${team.name} acertou: "${answer.text}" (#${index + 1})`);
-        
+        const player = getCurrentFaceoffPlayer(faceoffState.buzzerTeam);
+        addLog(`✓ ${player} (${team.name}) acertou: "${answer.text}" (#${index + 1})`);
+
         // Se acertou a #1, ganha automaticamente
         if (index === 0) {
-            addLog(`🏆 ${team.name} acertou a #1!`);
+            addLog(`🏆 ${player} (${team.name}) acertou a #1!`);
             showPlayOrPassPanel(faceoffState.buzzerTeam);
         } else {
             // Verificar se há possibilidade de acertar melhor (respostas acima ainda não reveladas)
             const canBeatIt = canAnyoneGetBetter(index);
-            
+
             if (canBeatIt && faceoffState.teamsOrder.length > 0) {
                 // Próxima equipa pode tentar acertar melhor
                 askIfBetterAnswer();
@@ -604,28 +700,30 @@ function handleFaceoffAnswer(index, answer) {
             }
         }
     } else if (faceoffState.phase === 'checking-better') {
-        // Outra equipa acertou uma resposta
-        const currentTeam = gameState.teams[faceoffState.teamsOrder[faceoffState.currentTeamIndex]];
+        // Outra equipa acertou uma resposta enquanto tentava bater a melhor
+        const currentTeamIdx = faceoffState.teamsOrder[faceoffState.currentTeamIndex];
+        const currentTeam = gameState.teams[currentTeamIdx];
         if (!currentTeam) return;
-        
-        addLog(`✓ ${currentTeam.name} acertou: "${answer.text}" (#${index + 1})`);
-        
+
+        const player = getCurrentFaceoffPlayer(currentTeamIdx);
+        addLog(`✓ ${player} (${currentTeam.name}) acertou: "${answer.text}" (#${index + 1})`);
+
         // Verificar se é melhor
         if (index < faceoffState.bestAnswer) {
             faceoffState.bestAnswer = index;
-            faceoffState.bestTeam = faceoffState.teamsOrder[faceoffState.currentTeamIndex];
+            faceoffState.bestTeam = currentTeamIdx;
             addLog(`🎯 ${currentTeam.name} tem agora a melhor resposta!`);
         }
-        
+
         // Se acertou a #1, essa equipa ganha
         if (index === 0) {
             addLog(`🏆 ${currentTeam.name} acertou a #1!`);
-            showPlayOrPassPanel(faceoffState.teamsOrder[faceoffState.currentTeamIndex]);
+            showPlayOrPassPanel(currentTeamIdx);
         } else {
             // Verificar se ainda há mais equipas e possibilidade de melhor
             faceoffState.currentTeamIndex++;
             const canBeatIt = canAnyoneGetBetter(faceoffState.bestAnswer);
-            
+
             if (canBeatIt && faceoffState.currentTeamIndex < faceoffState.teamsOrder.length) {
                 askIfBetterAnswer();
             } else {
@@ -635,24 +733,27 @@ function handleFaceoffAnswer(index, answer) {
         }
     } else if (faceoffState.phase === 'answering-other') {
         // Outra equipa (não buzzer) acertou depois do buzzer ter errado
-        const currentTeam = gameState.teams[faceoffState.teamsOrder[faceoffState.currentTeamIndex]];
+        const currentTeamIdx = faceoffState.teamsOrder[faceoffState.currentTeamIndex];
+        const currentTeam = gameState.teams[currentTeamIdx];
         if (!currentTeam) return;
-        
-        addLog(`✓ ${currentTeam.name} acertou: "${answer.text}" (#${index + 1})`);
-        
+
+        const player = getCurrentFaceoffPlayer(currentTeamIdx);
+        addLog(`✓ ${player} (${currentTeam.name}) acertou: "${answer.text}" (#${index + 1})`);
+
         faceoffState.bestAnswer = index;
-        faceoffState.bestTeam = faceoffState.teamsOrder[faceoffState.currentTeamIndex];
-        
+        faceoffState.bestTeam = currentTeamIdx;
+
         // Se acertou a #1, ganha automaticamente
         if (index === 0) {
             addLog(`🏆 ${currentTeam.name} acertou a #1!`);
-            showPlayOrPassPanel(faceoffState.teamsOrder[faceoffState.currentTeamIndex]);
+            showPlayOrPassPanel(currentTeamIdx);
         } else {
             // Verificar se outras equipas podem tentar acertar melhor
             faceoffState.currentTeamIndex++;
             const canBeatIt = canAnyoneGetBetter(index);
-            
+
             if (canBeatIt && faceoffState.currentTeamIndex < faceoffState.teamsOrder.length) {
+                // Mudar para fase de verificar se alguém bate
                 askIfBetterAnswer();
             } else {
                 // Esta equipa ganha
@@ -682,27 +783,30 @@ function askIfBetterAnswer() {
     const nextTeam = gameState.teams[nextTeamIndex];
     const bestTeam = gameState.teams[faceoffState.bestTeam];
     if (!nextTeam || !bestTeam) return;
-    
+
+    const player = getCurrentFaceoffPlayer(nextTeamIndex);
+
     faceoffState.phase = 'checking-better';
     faceoffState.waitingForAnswer = true;
-    
-    addLog(`❓ ${nextTeam.name} tenta acertar melhor que #${faceoffState.bestAnswer + 1}...`);
-    
+
+    // Notificar display sobre qual equipa está ativa no face-off
+    Sync.broadcast(Sync.EVENTS.CHANGE_TEAM, { teamIndex: nextTeamIndex, isFaceoff: true });
+
+    addLog(`❓ ${player} (${nextTeam.name}) tenta acertar melhor que #${faceoffState.bestAnswer + 1}...`);
+
     // Se só há uma equipa a mais, só pode dizer "não acertou"
     // Se há mais equipas, pode dizer "errou" (perdeu vez) ou revelar resposta
     const remainingTeams = faceoffState.teamsOrder.length - faceoffState.currentTeamIndex;
-    
+
     let buttons = '';
     if (remainingTeams === 1) {
-        // Última equipa - só pode confirmar se não acertou melhor
         buttons = `<button onclick="faceoffDidNotBeat(event)" class="btn-faceoff-wrong">✕ Não acertou melhor</button>`;
     } else {
-        // Múltiplas equipas restantes - pode errar (próxima tenta) ou não acertar melhor
         buttons = `<button onclick="faceoffMiss(event)" class="btn-faceoff-wrong">✕ ERROU (próxima equipa tenta)</button>`;
     }
-    
+
     updateFaceoffPanel(
-        `<strong>${escapeHtml(nextTeam.name)}</strong> acertou melhor que #${faceoffState.bestAnswer + 1}?<br><small>${escapeHtml(bestTeam.name)} tem a #${faceoffState.bestAnswer + 1}. Clica na resposta se acertou ou:</small>`,
+        `<strong>${escapeHtml(player)}</strong> <small>(${escapeHtml(nextTeam.name)})</small> acertou melhor que #${faceoffState.bestAnswer + 1}?<br><small>${escapeHtml(bestTeam.name)} tem a #${faceoffState.bestAnswer + 1}. Clica na resposta se acertou ou:</small>`,
         buttons
     );
 }
@@ -725,34 +829,41 @@ function faceoffMiss(evt) {
         // Equipa do buzzer errou
         const team = gameState.teams[faceoffState.buzzerTeam];
         if (!team) return;
-        
-        addLog(`✕ ${team.name} errou!`);
+
+        const player = getCurrentFaceoffPlayer(faceoffState.buzzerTeam);
+        addLog(`✕ ${player} (${team.name}) errou!`);
         faceoffState.buzzerAnswer = null;
-        
+
         // Próxima equipa tenta
         if (faceoffState.teamsOrder.length > 0) {
             const nextTeamIndex = faceoffState.teamsOrder[0];
             const nextTeam = gameState.teams[nextTeamIndex];
-            
+            const nextPlayer = getCurrentFaceoffPlayer(nextTeamIndex);
+
             // A próxima equipa agora tenta responder
             faceoffState.currentTeamIndex = 0;
             faceoffState.phase = 'answering-other';
             faceoffState.waitingForAnswer = true;
-            
+
+            // Notificar display sobre qual equipa está ativa
+            Sync.broadcast(Sync.EVENTS.CHANGE_TEAM, { teamIndex: nextTeamIndex, isFaceoff: true });
+
             updateFaceoffPanel(
-                `<strong>${escapeHtml(nextTeam.name)}</strong> responde!<br><small>Clica na resposta ou:</small>`,
+                `<strong>${escapeHtml(nextPlayer)}</strong> <small>(${escapeHtml(nextTeam.name)})</small> responde!<br><small>Clica na resposta ou:</small>`,
                 `<button onclick="faceoffOtherMiss(event)" class="btn-faceoff-wrong">✕ ERROU</button>`
             );
         }
     } else if (faceoffState.phase === 'checking-better') {
         // Equipa tentando bater errou - próxima tenta
-        const team = gameState.teams[faceoffState.teamsOrder[faceoffState.currentTeamIndex]];
+        const teamIdx = faceoffState.teamsOrder[faceoffState.currentTeamIndex];
+        const team = gameState.teams[teamIdx];
         if (!team) return;
-        
-        addLog(`✕ ${team.name} errou!`);
-        
+
+        const player = getCurrentFaceoffPlayer(teamIdx);
+        addLog(`✕ ${player} (${team.name}) errou!`);
+
         faceoffState.currentTeamIndex++;
-        
+
         if (faceoffState.currentTeamIndex < faceoffState.teamsOrder.length) {
             // Ainda há mais equipas
             askIfBetterAnswer();
@@ -777,30 +888,34 @@ function faceoffOtherMiss(evt) {
     faceoffState.waitingForAnswer = false;
     Sync.broadcast(Sync.EVENTS.PLAY_SOUND, { sound: 'buzzer' });
     
-    const team = gameState.teams[faceoffState.teamsOrder[faceoffState.currentTeamIndex]];
+    // Obter equipa atual
+    const currentTeamIdx = faceoffState.teamsOrder[faceoffState.currentTeamIndex];
+    const team = gameState.teams[currentTeamIdx];
     if (!team) return;
-    
-    addLog(`✕ ${team.name} errou!`);
+
+    const player = getCurrentFaceoffPlayer(currentTeamIdx);
+    addLog(`✕ ${player} (${team.name}) errou!`);
     
     faceoffState.currentTeamIndex++;
     
-    if (faceoffState.currentTeamIndex < faceoffState.teamsOrder.length) {
-        // Próxima equipa
-        const nextTeamIndex = faceoffState.teamsOrder[faceoffState.currentTeamIndex];
-        const nextTeam = gameState.teams[nextTeamIndex];
-        
-        faceoffState.waitingForAnswer = true;
-        updateFaceoffPanel(
-            `<strong>${escapeHtml(nextTeam.name)}</strong> responde!<br><small>Clica na resposta ou:</small>`,
-            `<button onclick="faceoffOtherMiss(event)" class="btn-faceoff-wrong">✕ ERROU</button>`
-        );
-    } else {
-        // Todas erraram depois de alguém acertar - a que acertou ganha
-        if (faceoffState.bestTeam !== null) {
+    // Verificar se alguém já acertou
+    if (faceoffState.bestTeam !== null) {
+        // Alguém já acertou - verificar se todas as equipas já tentaram
+        if (faceoffState.currentTeamIndex >= faceoffState.teamsOrder.length) {
+            // Todas as equipas já tentaram, decide vencedor
             decideFaceoffWinner();
         } else {
-            // Ninguém acertou nada - recomeçar alternando
+            // Ainda há equipas para tentar bater
+            askIfBetterAnswer();
+        }
+    } else {
+        // Ninguém acertou ainda
+        if (faceoffState.currentTeamIndex >= faceoffState.teamsOrder.length) {
+            // Todas erraram - recomeçar alternância
             allTeamsMissed();
+        } else {
+            // Próxima equipa tenta
+            askNextTeamToAnswer();
         }
     }
 }
@@ -825,19 +940,77 @@ function faceoffDidNotBeat(evt) {
 }
 
 function allTeamsMissed() {
-    // Todas as equipas erraram (NENHUMA acertou) - dar vitória à equipa que carregou no buzzer
-    const winnerTeamIndex = faceoffState.buzzerTeam ?? 0;
-    const winnerTeam = gameState.teams[winnerTeamIndex];
-    
-    if (!winnerTeam) return;
-    
-    addLog(`⚠️ Todas erraram! ${winnerTeam.name} joga por padrão (carregou primeiro).`);
-    
-    // Equipa do buzzer joga
-    faceoffState.bestTeam = winnerTeamIndex;
+    // Todas as equipas erraram - avançar para os próximos jogadores
+    advanceFaceoffPlayers();
+
+    addLog(`⚠️ Todos erraram! Próximos jogadores...`);
+
+    // O buzzer já foi carregado - não voltar a perguntar quem carregou.
+    // Apenas avançar jogadores e recomeçar a alternância de respostas,
+    // começando pela equipa 0 (ordem circular).
+    faceoffState.phase = 'answering-other';
+    faceoffState.currentTeamIndex = 0;
     faceoffState.bestAnswer = null;
-    
-    showPlayOrPassPanel(winnerTeamIndex);
+    faceoffState.bestTeam = null;
+    faceoffState.buzzerAnswer = null;
+    faceoffState.waitingForAnswer = false;
+    // Manter buzzerTeam - o buzzer já aconteceu
+
+    // Reconstruir teamsOrder: todas as equipas em ordem circular
+    faceoffState.teamsOrder = [];
+    for (let i = 0; i < gameState.teams.length; i++) {
+        faceoffState.teamsOrder.push(i);
+    }
+
+    // Mostrar matchup no display com os novos jogadores
+    const faceoffPlayers = gameState.teams.map((team, i) => ({
+        playerName: getCurrentFaceoffPlayer(i),
+        teamName: team.name,
+        teamColor: team.color || '#4a90d9'
+    }));
+    Sync.broadcast(Sync.EVENTS.FACEOFF_UPDATE, { phase: 'matchup', players: faceoffPlayers });
+
+    // Mostrar os novos jogadores no host antes de pedir resposta
+    let playersLine = gameState.teams.map((team, i) => {
+        const player = getCurrentFaceoffPlayer(i);
+        return `<strong>${escapeHtml(player)}</strong> <small>(${escapeHtml(team.name)})</small>`;
+    }).join(' vs ');
+
+    updateFaceoffPanel(
+        `⚠️ Todos erraram! Novos jogadores:<br>${playersLine}`,
+        `<button onclick="proceedAfterAllMissed()" class="btn-faceoff-play">▶️ Continuar</button>`
+    );
+}
+
+function proceedAfterAllMissed() {
+    // Pedir resposta à primeira equipa diretamente (sem buzzer)
+    askNextTeamToAnswer();
+}
+
+function askNextTeamToAnswer() {
+    // Próxima equipa a tentar responder
+    const nextTeamIndex = faceoffState.teamsOrder[faceoffState.currentTeamIndex];
+    const nextTeam = gameState.teams[nextTeamIndex];
+
+    if (!nextTeam) {
+        addLog('⚠️ Erro: equipa não encontrada');
+        return;
+    }
+
+    const player = getCurrentFaceoffPlayer(nextTeamIndex);
+
+    faceoffState.phase = 'answering-other';
+    faceoffState.waitingForAnswer = true;
+
+    // Notificar display sobre qual equipa está ativa
+    Sync.broadcast(Sync.EVENTS.CHANGE_TEAM, { teamIndex: nextTeamIndex, isFaceoff: true });
+
+    addLog(`🔔 ${player} (${nextTeam.name}) tenta responder...`);
+
+    updateFaceoffPanel(
+        `<strong>${escapeHtml(player)}</strong> <small>(${escapeHtml(nextTeam.name)})</small> responde!<br><small>Clica na resposta ou:</small>`,
+        `<button onclick="faceoffOtherMiss(event)" class="btn-faceoff-wrong">✕ ERROU</button>`
+    );
 }
 
 function decideFaceoffWinner() {
@@ -886,37 +1059,49 @@ function showPlayOrPassPanel(teamIndex) {
 
 function faceoffPlay(teamIndex) {
     hideFaceoffPanel();
-    
+
     const team = gameState.teams[teamIndex];
     if (!team) return;
-    
+
+    // Limpar face-off do display público
+    Sync.broadcast(Sync.EVENTS.FACEOFF_UPDATE, { phase: 'end' });
+
+    // Avançar jogadores para o próximo face-off
+    advanceFaceoffPlayers();
+
     setControllingTeam(teamIndex);
     gameState.phase = 'playing';
     Storage.saveGameState(gameState);
     updateRoundInfo();
-    
+
     // Iniciar timer automaticamente quando a equipa começa a jogar
     resetTimer();
     startTimer();
-    
+
     addLog(`▶️ ${team.name} joga!`);
 }
 
 function faceoffPass(teamIndex) {
     hideFaceoffPanel();
-    
+
     const team = gameState.teams[teamIndex];
     if (!team) return;
-    
+
+    // Limpar face-off do display público
+    Sync.broadcast(Sync.EVENTS.FACEOFF_UPDATE, { phase: 'end' });
+
+    // Avançar jogadores para o próximo face-off
+    advanceFaceoffPlayers();
+
     setControllingTeam(teamIndex);
     gameState.phase = 'playing';
     Storage.saveGameState(gameState);
     updateRoundInfo();
-    
+
     // Iniciar timer automaticamente quando a equipa começa a jogar
     resetTimer();
     startTimer();
-    
+
     addLog(`Passou para ${team.name}!`);
 }
 
@@ -942,7 +1127,7 @@ function revealQuestion() {
 }
 
 function skipQuestion() {
-    showConfirm('Saltar Pergunta?', 'A pergunta será marcada como "usada" e não será atribuída pontos.', () => {
+    showConfirm('Saltar Pergunta?', 'A pergunta NÃO será contada como jogada. Podes jogá-la noutra sessão.', () => {
         const round = gameState.rounds[gameState.currentRound];
         if (!round || !round.question) return;
         
@@ -951,12 +1136,10 @@ function skipQuestion() {
         disableSteal();
         stopTimer();
         
-        // Marcar pergunta como usada
-        if (round.question.id) {
-            Storage.markQuestionUsed(round.question.id);
-        }
+        // NÃO marcar pergunta como usada - o skip serve para não contar
+        // A pergunta poderá ser jogada noutra sessão
         
-        addLog(`⏭️ Pergunta saltada: "${round.question.text}"`);
+        addLog(`⏭️ Pergunta saltada (não contou): "${round.question.text}"`);
         
         // Avançar para próxima ronda
         if (gameState.currentRound >= gameState.rounds.length - 1) {
@@ -1112,6 +1295,20 @@ function resetStrikes() {
 // ============================================
 // TEAM MANAGEMENT
 // ============================================
+
+function adjustScore(teamIndex, delta) {
+    const team = gameState.teams[teamIndex];
+    if (!team) return;
+
+    if (typeof team.score !== 'number') team.score = 0;
+    team.score = Math.max(0, team.score + delta);
+
+    Storage.saveGameState(gameState);
+    Sync.broadcast(Sync.EVENTS.UPDATE_SCORE, { teamIndex, score: team.score });
+    renderScoreboard();
+
+    addLog(`✏️ ${team.name}: ${delta > 0 ? '+' : ''}${delta} pontos (total: ${team.score})`);
+}
 
 function setControllingTeam(teamIndex) {
     const team = gameState.teams[teamIndex];
@@ -1281,9 +1478,15 @@ function enableSteal() {
     Storage.saveGameState(gameState);
     Sync.broadcast(Sync.EVENTS.ADD_STRIKE, { count: 0 });
     renderStrikes();
-    
+
     // Show steal panel
     showStealPanel();
+
+    // Timer fixo de 5 segundos para o roubo
+    currentTimer = 5;
+    const timerDisplay = document.getElementById('timerDisplay');
+    if (timerDisplay) timerDisplay.textContent = currentTimer;
+    startTimer();
 }
 
 function showStealPanel() {
@@ -1463,6 +1666,13 @@ function nextRound() {
         return;
     }
     
+    // Verificar se estamos a transitar para rondas duplas
+    const currentRound = gameState.rounds[gameState.currentRound];
+    const nextRoundData = gameState.rounds[gameState.currentRound + 1];
+    const transitionToDouble = currentRound && nextRoundData && 
+                               (currentRound.multiplier || 1) === 1 && 
+                               (nextRoundData.multiplier || 1) === 2;
+    
     // Move to next round
     gameState.currentRound++;
     gameState.strikes = 0;
@@ -1487,6 +1697,12 @@ function nextRound() {
         bestAnswer: null,
         bestTeam: null
     };
+    
+    // Se estamos a transitar para rondas duplas, mostrar animação
+    if (transitionToDouble) {
+        showDoublePointsPopup();
+        Sync.broadcast(Sync.EVENTS.DOUBLE_POINTS_TRANSITION, {});
+    }
     
     // Save and sync
     Storage.saveGameState(gameState);
@@ -1531,7 +1747,7 @@ function startTimer() {
             
             if (currentTimer <= 0) {
                 stopTimer();
-                Sync.broadcast(Sync.EVENTS.PLAY_SOUND, { sound: 'buzzer' });
+                Sync.broadcast(Sync.EVENTS.PLAY_SOUND, { sound: 'timeup' });
                 addLog('⏱️ Tempo esgotado!');
             }
         }
@@ -1582,6 +1798,12 @@ function togglePause() {
 // ============================================
 // GAME END
 // ============================================
+
+function confirmEndGame() {
+    showConfirm('Terminar Jogo?', 'Tens a certeza que queres terminar o jogo agora?', () => {
+        endGame();
+    });
+}
 
 function endGame() {
     // Verificar se há equipas
@@ -1771,6 +1993,34 @@ function showConfirm(title, message, onConfirm) {
 function closeConfirm() {
     const modal = document.getElementById('confirmModal');
     if (modal) modal.classList.remove('active');
+}
+
+// ============================================
+// DOUBLE POINTS TRANSITION POPUP
+// ============================================
+
+function showDoublePointsPopup() {
+    // Criar popup rápido no host
+    const popup = document.createElement('div');
+    popup.className = 'double-points-popup-host';
+    popup.innerHTML = `
+        <div class="double-popup-content">
+            <div class="double-popup-icon">⚡</div>
+            <div class="double-popup-text">PONTOS DUPLOS!</div>
+            <div class="double-popup-subtext">As próximas rondas valem 2x</div>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Animar entrada
+    setTimeout(() => popup.classList.add('active'), 50);
+    
+    // Remover após 2.5 segundos
+    setTimeout(() => {
+        popup.classList.remove('active');
+        setTimeout(() => popup.remove(), 500);
+    }, 2500);
 }
 
 // ============================================

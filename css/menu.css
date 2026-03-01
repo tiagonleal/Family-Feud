@@ -243,6 +243,57 @@
     background: #1b5e20;
 }
 
+/* Answer Count Filter */
+.answer-count-selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.answer-count-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 12px 18px;
+    font-family: var(--font-main);
+    background: linear-gradient(180deg, var(--accent-blue) 0%, var(--primary-blue) 100%);
+    border: 3px solid var(--light-blue);
+    border-radius: 10px;
+    color: var(--white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 60px;
+}
+
+.answer-count-btn:hover {
+    background: linear-gradient(180deg, var(--light-blue) 0%, var(--accent-blue) 100%);
+}
+
+.answer-count-btn.active {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border-color: var(--gold);
+    color: var(--black);
+}
+
+.answer-count-num {
+    font-size: 1.6rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.answer-count-total {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.filter-info {
+    margin-top: 10px;
+    font-size: 0.95rem;
+    color: var(--light-blue);
+    opacity: 0.8;
+}
+
 /* Rounds Configuration */
 .rounds-config {
     display: flex;
